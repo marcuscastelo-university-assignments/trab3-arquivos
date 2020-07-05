@@ -7,18 +7,18 @@
 #define H_DECREASE -2
 
 typedef enum {
-    HMASK_NONE = 0,
-    HMASK_STATUS = 1,
-    HMASK_NEXTRRN = 2,
-    HMASK_REGISTRIESCOUNT = 4,
-    HMASK_REMOVEDCOUNT = 8,
-    HMASK_UPDATEDCOUNT = 16,
-    HMASK_ALL = 31
+    RHMASK_NONE = 0,
+    RHMASK_STATUS = 1,
+    RHMASK_NEXTRRN = 2,
+    RHMASK_REGISTRIESCOUNT = 4,
+    RHMASK_REMOVEDCOUNT = 8,
+    RHMASK_UPDATEDCOUNT = 16,
+    RHMASK_ALL = 31
 } ChangedRHeadersMask;
 
-typedef struct _header RegistryHeader;
+typedef struct _reg_header RegistryHeader;
 
-RegistryHeader *header_create(void);
+RegistryHeader *reg_header_create(void);
 void reg_header_delete(RegistryHeader **header_ptr);
 
 void reg_header_read_from_bin(RegistryHeader *header, FILE *bin_file);

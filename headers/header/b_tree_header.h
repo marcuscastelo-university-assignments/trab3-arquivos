@@ -1,41 +1,40 @@
-// #pragma once
+#pragma once
 
-// #include <stdio.h>
-// #include "bool.h"
+#include <stdio.h>
+#include "bool.h"
 
-// #define H_INCREASE -1
-// #define H_DECREASE -2
+#define H_INCREASE -1
+#define H_DECREASE -2
 
-// typedef enum {
-//     HMASK_NONE = 0,
-//     HMASK_STATUS = 1,
-//     HMASK_NEXTRRN = 2,
-//     HMASK_REGISTRIESCOUNT = 4,
-//     HMASK_REMOVEDCOUNT = 8,
-//     HMASK_UPDATEDCOUNT = 16,
-//     HMASK_ALL = 31
-// } ChangedBTHeadersMask;
+typedef enum {
+    BTHMASK_NONE = 0,
+    BTHMASK_STATUS = 1,
+    BTHMASK_NORAIZ = 2,
+    BTHMASK_NRONIVEIS = 4,
+    BTHMASK_PROXRRN = 8,
+    BTHMASK_NROCHAVES = 16,
+    BTHMASK_ALL = 31
+} ChangedBTHeadersMask;
 
-// typedef struct _header RegistryHeader;
+typedef struct _b_tree_header BTHeader;
 
-// RegistryHeader *header_create(void);
-// void reg_header_delete(RegistryHeader **header_ptr);
+BTHeader *b_tree_header_create(void);
+void b_tree_header_delete(BTHeader **header_ptr);
 
-// void reg_header_read_from_bin(RegistryHeader *header, FILE *bin_file);
-// void reg_header_write_to_bin(RegistryHeader *header, FILE *bin_file);
+void b_tree_header_write_to_bin(BTHeader *header, FILE *file);
+void b_tree_header_read_from_bin(BTHeader *header, FILE *bin_file);
 
-// char reg_header_get_status (RegistryHeader *header);
-// void reg_header_set_status (RegistryHeader *header, char new_status);
+char b_tree_header_get_status(BTHeader *header);
+void b_tree_header_set_status(BTHeader *header, char new_status);
 
-// int reg_header_get_registries_count (RegistryHeader *header);
-// void reg_header_set_registries_count (RegistryHeader *header, int counter);
-// bool has_registries_inserted (RegistryHeader *header);
+int b_tree_header_get_noRaiz (BTHeader *header);
+void b_tree_header_set_noRaiz (BTHeader *header, int new_value);
 
-// int reg_header_get_removed_count (RegistryHeader *header);
-// void reg_header_set_removed_count (RegistryHeader *header, int counter);
+int b_tree_header_get_nroNiveis (BTHeader *header);
+void b_tree_header_set_nroNiveis (BTHeader *header, int new_value);
 
-// int reg_header_get_updated_count (RegistryHeader *header);
-// void reg_header_set_updated_count (RegistryHeader *header, int counter);
+int b_tree_header_get_proxRRN (BTHeader *header);
+void b_tree_header_set_proxRRN (BTHeader *header, int new_value);
 
-// int reg_header_get_next_RRN (RegistryHeader *header);
-// void reg_header_set_next_RRN (RegistryHeader *header, int new_rrn);
+int b_tree_header_get_nroChaves (BTHeader *header);
+void b_tree_header_set_nroChaves (BTHeader *header, int new_value);

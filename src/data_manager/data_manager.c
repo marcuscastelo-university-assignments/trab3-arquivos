@@ -122,7 +122,7 @@ OPEN_RESULT data_manager_open(DataManager *manager, OPEN_MODE mode) {
     if (manager->bin_file == NULL) return OPEN_FAILED; 
 
     //Inicializa os headers com valores padrão (ou será usado para a escrita de um novo arquivo, ou substituído pelos headers do arquivo existente)
-    manager->header = header_create();
+    manager->header = reg_header_create();
 
     //Tenta criar um RegistryManager
     manager->registry_manager = registry_manager_create(manager->bin_file, manager->header);
