@@ -2,7 +2,7 @@ INC = $(foreach i,$(shell find ./headers -type d),$(shell echo "-I $i"))
 SRC = ./src
 COMP = gcc
 
-SRC_RULES = binary header registry data_manager utils csv
+SRC_RULES = binary header registry data_manager utils csv b_tree
 
 all: $(SRC_RULES)
 	$(COMP) *.o $(SRC)/main.c -o prog $(INC) -Wall
