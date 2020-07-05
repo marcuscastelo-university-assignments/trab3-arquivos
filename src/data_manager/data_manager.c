@@ -74,7 +74,7 @@ void data_manager_write_headers(DataManager *manager) {
     }
 
     //Escreve os headers no arquivo binário
-    header_write_to_bin(manager->header, manager->bin_file);
+    reg_header_write_to_bin(manager->header, manager->bin_file);
 }
 
 /**
@@ -96,7 +96,7 @@ void data_manager_read_headers(DataManager *manager) {
         return;
     }
 
-    header_read_from_bin(manager->header, manager->bin_file);
+    reg_header_read_from_bin(manager->header, manager->bin_file);
 }
 
 /**
@@ -133,16 +133,16 @@ OPEN_RESULT data_manager_open(DataManager *manager, OPEN_MODE mode) {
     
     //Se o modo for WRITE, ou seja, criar um novo arquivo, defina os headers com valores iniciais
     if (mode == WRITE) {
-        header_write_to_bin(manager->header, manager->bin_file);
+        reg_header_write_to_bin(manager->header, manager->bin_file);
     } else { 
         //Se for outro modo, ou seja, o arquivo já existe, atualize o headers e certifique-se de que o arquivo está consistente e não vazio
-        header_read_from_bin(manager->header, manager->bin_file);
-        if (header_get_status(manager->header) != '1') return OPEN_INCONSISTENT;
-        if (header_get_registries_count(manager->header) == 0) return OPEN_EMPTY;
+        reg_header_read_from_bin(manager->header, manager->bin_file);
+        if (reg_header_get_status(manager->header) != '1') return OPEN_INCONSISTENT;
+        if (reg_header_get_registries_count(manager->header) == 0) return OPEN_EMPTY;
 
         if (mode == MODIFY) { //Se houver intenção de modificar o arquivo, defina o status como inconsistente
-            header_set_status(manager->header, '0');
-            header_write_to_bin(manager->header, manager->bin_file);
+            reg_header_set_status(manager->header, '0');
+            reg_header_write_to_bin(manager->header, manager->bin_file);
         }
     }
 
@@ -164,10 +164,10 @@ void data_manager_close(DataManager *manager) {
     
     //Marca o arquivo como consistente. (OBS: não é necessário no caso da leitura, pois nenhuma modificação foi feita)
     if (manager->requested_mode != READ) {
-        header_set_status(manager->header, '1');
+        reg_header_set_status(manager->header, '1');
         data_manager_write_headers(manager);
     }
-    header_delete(&manager->header);
+    reg_header_delete(&manager->header);
 
     //Libera a memória utilizada pelo RegistryManager e fecha o arquivo
     registry_manager_delete(&manager->registry_manager);
@@ -236,8 +236,8 @@ void data_manager_insert_arr_at_end(DataManager *manager, VirtualRegistry **reg_
     }
 
     //Atualiza apenas ao fim de toda a operação o próximo RRN
-    header_set_next_RRN(manager->header, header_get_next_RRN(manager->header) + arr_size);
-    header_set_registries_count(manager->header, header_get_registries_count(manager->header) + arr_size);
+    reg_header_set_next_RRN(manager->header, reg_header_get_next_RRN(manager->header) + arr_size);
+    reg_header_set_registries_count(manager->header, reg_header_get_registries_count(manager->header) + arr_size);
 }
 
 
@@ -276,7 +276,7 @@ VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *
         return NULL;
     } 
 
-    int registriesCounter = header_get_registries_count(manager->header);
+    int registriesCounter = reg_header_get_registries_count(manager->header);
 
     //Tenta criar uma lista ligada na qual serão inseridos os registros que condizerem com os termos de busca
     RegistryLinkedList *list = registry_linked_list_create();
@@ -338,7 +338,7 @@ VirtualRegistry *data_manager_fetch_at(DataManager *manager, int RRN) {
     } 
 
     //Indica que o registro é inexistente se o RRN for inexistente
-    if (header_get_next_RRN(manager->header) <= RRN) return NULL;
+    if (reg_header_get_next_RRN(manager->header) <= RRN) return NULL;
 
     return registry_manager_read_at(manager->registry_manager, RRN);
 }
@@ -366,7 +366,7 @@ VirtualRegistryArray *data_manager_fetch_all(DataManager *manager) {
 
     #define reg_man manager->registry_manager
 
-    int arr_size = header_get_registries_count(manager->header);
+    int arr_size = reg_header_get_registries_count(manager->header);
 
     //Se não houver registros, retorna um vetor vazio
     if (arr_size == 0) return virtual_registry_array_create(NULL, 0);
@@ -406,8 +406,8 @@ void data_manager_remove_matches (DataManager *manager, VirtualRegistryArray *se
         return;
     }
 
-    int cur_reg_count = header_get_registries_count(manager->header);
-    int cur_del_count = header_get_removed_count(manager->header);
+    int cur_reg_count = reg_header_get_registries_count(manager->header);
+    int cur_del_count = reg_header_get_removed_count(manager->header);
     int new_del_count = 0;
 
     //Garante que existem registros para sererm removidos
@@ -440,8 +440,8 @@ void data_manager_remove_matches (DataManager *manager, VirtualRegistryArray *se
     }
 
     //Atualiza os headers (apenas na RAM, por enquanto)
-    header_set_removed_count(manager->header, cur_del_count + new_del_count);
-    header_set_registries_count(manager->header, cur_reg_count - new_del_count);
+    reg_header_set_removed_count(manager->header, cur_del_count + new_del_count);
+    reg_header_set_registries_count(manager->header, cur_reg_count - new_del_count);
 
     #undef reg_man
 } 
@@ -473,12 +473,12 @@ void data_manager_update_at(DataManager *manager, int RRN, VirtualRegistryUpdate
     }
 
 
-    if (header_get_next_RRN(manager->header) <= RRN) return;
+    if (reg_header_get_next_RRN(manager->header) <= RRN) return;
 
     registry_manager_seek(manager->registry_manager, RRN);
 
     if (registry_manager_is_current_deleted(manager->registry_manager) == false) {
         registry_manager_update_current(manager->registry_manager, new_data);
-        header_set_updated_count(manager->header, H_INCREASE);
+        reg_header_set_updated_count(manager->header, H_INCREASE);
     }
 }   

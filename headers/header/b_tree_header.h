@@ -19,23 +19,23 @@
 // typedef struct _header RegistryHeader;
 
 // RegistryHeader *header_create(void);
-// void header_delete(RegistryHeader **header_ptr);
+// void reg_header_delete(RegistryHeader **header_ptr);
 
-// void header_read_from_bin(RegistryHeader *header, FILE *bin_file);
-// void header_write_to_bin(RegistryHeader *header, FILE *bin_file);
+// void reg_header_read_from_bin(RegistryHeader *header, FILE *bin_file);
+// void reg_header_write_to_bin(RegistryHeader *header, FILE *bin_file);
 
-// char header_get_status (RegistryHeader *header);
-// void header_set_status (RegistryHeader *header, char new_status);
+// char reg_header_get_status (RegistryHeader *header);
+// void reg_header_set_status (RegistryHeader *header, char new_status);
 
-// int header_get_registries_count (RegistryHeader *header);
-// void header_set_registries_count (RegistryHeader *header, int counter);
+// int reg_header_get_registries_count (RegistryHeader *header);
+// void reg_header_set_registries_count (RegistryHeader *header, int counter);
 // bool has_registries_inserted (RegistryHeader *header);
 
-// int header_get_removed_count (RegistryHeader *header);
-// void header_set_removed_count (RegistryHeader *header, int counter);
+// int reg_header_get_removed_count (RegistryHeader *header);
+// void reg_header_set_removed_count (RegistryHeader *header, int counter);
 
-// int header_get_updated_count (RegistryHeader *header);
-// void header_set_updated_count (RegistryHeader *header, int counter);
+// int reg_header_get_updated_count (RegistryHeader *header);
+// void reg_header_set_updated_count (RegistryHeader *header, int counter);
 
-// int header_get_next_RRN (RegistryHeader *header);
-// void header_set_next_RRN (RegistryHeader *header, int new_rrn);
+// int reg_header_get_next_RRN (RegistryHeader *header);
+// void reg_header_set_next_RRN (RegistryHeader *header, int new_rrn);

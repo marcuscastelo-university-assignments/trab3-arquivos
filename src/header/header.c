@@ -56,10 +56,10 @@ RegistryHeader *header_create(void) {
  *      RegistryHeader **header_ptr -> referência à variável que guarda o pointer para o TAD
  *  Retorno: void
  */
-void header_delete(RegistryHeader **header_ptr) {
+void reg_header_delete(RegistryHeader **header_ptr) {
     //Validação de parâmetros
     if (header_ptr == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null pointer @header_delete()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null pointer @reg_header_delete()\n");
         return;
     }
     
@@ -78,22 +78,22 @@ void header_delete(RegistryHeader **header_ptr) {
  *      FILE *file -> stream com escrita permitida do arquivo binário destino
  *  Retorno: void
  */
-void header_write_to_bin(RegistryHeader *header, FILE *file) {
+void reg_header_write_to_bin(RegistryHeader *header, FILE *file) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @header_write_to_bin()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null header @reg_header_write_to_bin()\n");
         return;
     }
 
     if (file == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null file stream @header_write_to_bin()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null file stream @reg_header_write_to_bin()\n");
         return;
     }
 
     //Verifica se é necessário escrever o lixo dos headers (ou seja, se o arquivo acabou de ser criado)
     bool shouldWriteGarbage = false;
     if (header->status == -1) { //O status -1 indica que o arquivo acabou de ser criado e, portanto, não possuia headers
-        header_set_status(header, '0'); //Indica o arquivo como inconsistente
+        reg_header_set_status(header, '0'); //Indica o arquivo como inconsistente
         shouldWriteGarbage = true;
     }
 
@@ -170,15 +170,15 @@ void header_write_to_bin(RegistryHeader *header, FILE *file) {
  *      FILE *bin_file -> arquivo aberto do qual os headers serão lidos
  *  Retorno: void
  */
-void header_read_from_bin(RegistryHeader *header, FILE *bin_file) {
+void reg_header_read_from_bin(RegistryHeader *header, FILE *bin_file) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @header_read_from_bin()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null header @reg_header_read_from_bin()\n");
         return;
     }
 
     if (bin_file == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null file stream @header_read_from_bin()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null file stream @reg_header_read_from_bin()\n");
         return;
     }
 
@@ -203,7 +203,7 @@ void header_read_from_bin(RegistryHeader *header, FILE *bin_file) {
     Retorno:
         char -> status: '0' = inconsistente, '1' = consistente
 */
-char header_get_status (RegistryHeader *header) { return header->status; }
+char reg_header_get_status (RegistryHeader *header) { return header->status; }
 
 /*
 	Simples função get, retorna o valor encapsulado (next_RRN)
@@ -212,7 +212,7 @@ char header_get_status (RegistryHeader *header) { return header->status; }
     Retorno:
         int -> o próximo RRN do arquivo
 */
-int header_get_next_RRN (RegistryHeader *header) { return header->next_RRN; }
+int reg_header_get_next_RRN (RegistryHeader *header) { return header->next_RRN; }
 
 /*
 	Simples função get, retorna o valor encapsulado (registries_count)
@@ -221,7 +221,7 @@ int header_get_next_RRN (RegistryHeader *header) { return header->next_RRN; }
     Retorno:
         int -> a quantidade de registros
 */
-int header_get_registries_count (RegistryHeader *header) { return header->registries_count; }
+int reg_header_get_registries_count (RegistryHeader *header) { return header->registries_count; }
 
 /*
 	Simples função get, retorna o valor encapsulado (removed_count)
@@ -230,7 +230,7 @@ int header_get_registries_count (RegistryHeader *header) { return header->regist
     Retorno:
         int -> a quantidade de registros removidos
 */
-int header_get_removed_count (RegistryHeader *header) { return header->removed_count; }
+int reg_header_get_removed_count (RegistryHeader *header) { return header->removed_count; }
 
 /*
 	Simples função get, retorna o valor encapsulado (updated_count)
@@ -239,7 +239,7 @@ int header_get_removed_count (RegistryHeader *header) { return header->removed_c
     Retorno:
         int -> a quantidade de registros atualizados
 */
-int header_get_updated_count (RegistryHeader *header) { return header->updated_count; }
+int reg_header_get_updated_count (RegistryHeader *header) { return header->updated_count; }
 
 /*
 	Simples função set, define o valor encapsulado (status).
@@ -250,15 +250,15 @@ int header_get_updated_count (RegistryHeader *header) { return header->updated_c
         char new_status -> '0' = inconsistente, '1' = consistente
     Retorno: void
 */
-void header_set_status(RegistryHeader *header, char new_status) {
+void reg_header_set_status(RegistryHeader *header, char new_status) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @header_set_status()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null header @reg_header_set_status()\n");
         return;
     }
 
     if (new_status != '0' && new_status != '1') {
-        fprintf(stderr, "ERROR: (parameter) invalid status provided, should be '0' or '1' @header_set_status()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid status provided, should be '0' or '1' @reg_header_set_status()\n");
         return;
     }
 
@@ -286,7 +286,7 @@ int _parse_counter(int current_value, int counter) {
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_next_RRN (RegistryHeader *header, int new_value) {
+void reg_header_set_next_RRN (RegistryHeader *header, int new_value) {
 	header->next_RRN = _parse_counter(header->next_RRN, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -302,7 +302,7 @@ void header_set_next_RRN (RegistryHeader *header, int new_value) {
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_registries_count (RegistryHeader *header, int new_value) {
+void reg_header_set_registries_count (RegistryHeader *header, int new_value) {
 	header->registries_count = _parse_counter(header->registries_count, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -318,7 +318,7 @@ void header_set_registries_count (RegistryHeader *header, int new_value) {
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_removed_count (RegistryHeader *header, int new_value) {
+void reg_header_set_removed_count (RegistryHeader *header, int new_value) {
 	header->removed_count = _parse_counter(header->removed_count, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -334,7 +334,7 @@ void header_set_removed_count (RegistryHeader *header, int new_value) {
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_updated_count (RegistryHeader *header, int new_value) {
+void reg_header_set_updated_count (RegistryHeader *header, int new_value) {
 	header->updated_count = _parse_counter(header->updated_count, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.

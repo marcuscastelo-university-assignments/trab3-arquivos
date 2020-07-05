@@ -126,7 +126,7 @@ void registry_manager_seek_end(RegistryManager *manager) {
 		return;
 	}
 
-	int end = header_get_next_RRN(manager->header);
+	int end = reg_header_get_next_RRN(manager->header);
 	registry_manager_seek(manager, end);
 }
 
