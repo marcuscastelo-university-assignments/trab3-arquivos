@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __DATA_MANAGER__H__
+#define __DATA_MANAGER__H__
 
 #include <stdio.h>
 
@@ -55,3 +56,5 @@ void data_manager_remove_at(DataManager *manager, int RRN);
 
 void data_manager_update(DataManager *manager, VirtualRegistry *match_terms, VirtualRegistry *new_data);
 void data_manager_update_at(DataManager *manager, int RRN, VirtualRegistry *new_data);
+
+#endif  //!__DATA_MANAGER__H__

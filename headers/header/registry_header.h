@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __REGISTRY_HEADER__H__
+#define __REGISTRY_HEADER__H__
 
 #include <stdio.h>
 #include "bool.h"
@@ -39,3 +40,5 @@ void reg_header_set_updated_count (RegistryHeader *header, int counter);
 
 int reg_header_get_next_RRN (RegistryHeader *header);
 void reg_header_set_next_RRN (RegistryHeader *header, int new_rrn);
+
+#endif  //!__REGISTRY_HEADER__H__

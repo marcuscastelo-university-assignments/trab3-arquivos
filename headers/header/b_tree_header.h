@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __B_TREE_HEADER__H__
+#define __B_TREE_HEADER__H__
 
 #include <stdio.h>
 #include "bool.h"
@@ -38,3 +39,5 @@ void b_tree_header_set_proxRRN (BTHeader *header, int new_value);
 
 int b_tree_header_get_nroChaves (BTHeader *header);
 void b_tree_header_set_nroChaves (BTHeader *header, int new_value);
+
+#endif  //!__B_TREE_HEADER__H__

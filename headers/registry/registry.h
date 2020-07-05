@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __REGISTRY__H__
+#define __REGISTRY__H__
 
 #include <stdio.h>
 #include <bool.h>
@@ -52,3 +53,5 @@ bool virtual_registry_compare(VirtualRegistry *reg_data_1, VirtualRegistry *reg_
 
 char *virtual_registry_read_value_from_input(char *field_name);
 VirtualRegistry *virtual_registry_create_from_input(bool is_real_register);
+
+#endif  //!__REGISTRY__H__

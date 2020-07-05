@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __REGISTRY_MASK__H__
+#define __REGISTRY_MASK__H__
 
 /**
  *  Possíveis mascaras de campo que definem quais campos serão usados em registros
@@ -24,3 +25,5 @@ enum _virtual_registry_mask {
 typedef enum _virtual_registry_mask RegistryFieldsMask;
 
 RegistryFieldsMask registry_mask_from_field_name(char *field_name);
+
+#endif  //!__REGISTRY_MANAGER__H__

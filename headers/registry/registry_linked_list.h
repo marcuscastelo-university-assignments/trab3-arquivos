@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __REGISTRY_LINKED_LIST__H__
+#define __REGISTRY_LINKED_LIST__H__
 
 #include "registry.h"
 #include "registry_array.h"
@@ -14,3 +15,5 @@ VirtualRegistryArray *registry_linked_list_to_array(RegistryLinkedList *list);
 int registry_linked_list_get_size(RegistryLinkedList *list);
 
 void registry_linked_list_delete(RegistryLinkedList **list_ptr, bool should_delete_data);
+
+#endif  //!__REGISTRY_LINKED_LIST__H__

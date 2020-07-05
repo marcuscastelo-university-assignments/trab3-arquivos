@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __REGISTRY_MANAGER__H__
+#define __REGISTRY_MANAGER__H__
 
 #include <stdio.h>
 
@@ -37,4 +38,4 @@ bool registry_manager_is_current_deleted (RegistryManager *manager);
 
 void registry_manager_jump_registry (RegistryManager *manager, int direction);
 
-
+#endif  //!__REGISTRY_MANAGER__H__
