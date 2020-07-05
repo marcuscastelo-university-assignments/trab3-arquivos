@@ -1,4 +1,4 @@
-#include "header.h"
+#include "registry_header.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,7 @@
  *  portanto, precisam ser escritos.
  */
 struct _header {
-    ChangedHeadersMask changedMask;
+    ChangedRHeadersMask changedMask;
     char status;
     int next_RRN;
     int registries_count;
@@ -26,11 +26,11 @@ struct _header {
 /**
  *  Factory de criação do TAD descrito acima
  *  Parâmetros: void
- *  Retorno: Header* -> a instância criada pelo factory
+ *  Retorno: RegistryHeader* -> a instância criada pelo factory
  */
-Header *header_create(void) {
+RegistryHeader *header_create(void) {
     //Tenta alocar memória
-    Header *header = malloc(sizeof(Header));
+    RegistryHeader *header = malloc(sizeof(RegistryHeader));
     if (header == NULL) {
         fprintf(stderr, "ERROR: not enough memory @header_create()\n");
         return NULL;
@@ -51,12 +51,12 @@ Header *header_create(void) {
 
 
 /**
- *  Libera a memória usada pelo TAD Header
+ *  Libera a memória usada pelo TAD RegistryHeader
  *  Parâmetros:
- *      Header **header_ptr -> referência à variável que guarda o pointer para o TAD
+ *      RegistryHeader **header_ptr -> referência à variável que guarda o pointer para o TAD
  *  Retorno: void
  */
-void header_delete(Header **header_ptr) {
+void header_delete(RegistryHeader **header_ptr) {
     //Validação de parâmetros
     if (header_ptr == NULL) {
         fprintf(stderr, "ERROR: (parameter) invalid null pointer @header_delete()\n");
@@ -74,11 +74,11 @@ void header_delete(Header **header_ptr) {
  *  Função otimizada para evitar escritas desnecessárias ao disco
  *  Para isso, cada campo tem um indicador de modificação. Se o campo tiver sido modificado, ele precisa ser escrito.
  *  Parâmetros:
- *      Header *header -> struct que contêm os headers a serem escritos, se necessário.
+ *      RegistryHeader *header -> struct que contêm os headers a serem escritos, se necessário.
  *      FILE *file -> stream com escrita permitida do arquivo binário destino
  *  Retorno: void
  */
-void header_write_to_bin(Header *header, FILE *file) {
+void header_write_to_bin(RegistryHeader *header, FILE *file) {
     //Validação de parâmetros
     if (header == NULL) {
         fprintf(stderr, "ERROR: (parameter) invalid null header @header_write_to_bin()\n");
@@ -166,11 +166,11 @@ void header_write_to_bin(Header *header, FILE *file) {
 /**
  *  Atualiza o valor dos headers, lendo diretamente do disco.
  *  Parâmetros:
- *      Header *header -> header para o qual será direcionada a informação no disco presente
+ *      RegistryHeader *header -> header para o qual será direcionada a informação no disco presente
  *      FILE *bin_file -> arquivo aberto do qual os headers serão lidos
  *  Retorno: void
  */
-void header_read_from_bin(Header *header, FILE *bin_file) {
+void header_read_from_bin(RegistryHeader *header, FILE *bin_file) {
     //Validação de parâmetros
     if (header == NULL) {
         fprintf(stderr, "ERROR: (parameter) invalid null header @header_read_from_bin()\n");
@@ -199,58 +199,58 @@ void header_read_from_bin(Header *header, FILE *bin_file) {
 /*
 	Simples função get, retorna o valor encapsulado (status)
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
     Retorno:
         char -> status: '0' = inconsistente, '1' = consistente
 */
-char header_get_status (Header *header) { return header->status; }
+char header_get_status (RegistryHeader *header) { return header->status; }
 
 /*
 	Simples função get, retorna o valor encapsulado (next_RRN)
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
     Retorno:
         int -> o próximo RRN do arquivo
 */
-int header_get_next_RRN (Header *header) { return header->next_RRN; }
+int header_get_next_RRN (RegistryHeader *header) { return header->next_RRN; }
 
 /*
 	Simples função get, retorna o valor encapsulado (registries_count)
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
     Retorno:
         int -> a quantidade de registros
 */
-int header_get_registries_count (Header *header) { return header->registries_count; }
+int header_get_registries_count (RegistryHeader *header) { return header->registries_count; }
 
 /*
 	Simples função get, retorna o valor encapsulado (removed_count)
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
     Retorno:
         int -> a quantidade de registros removidos
 */
-int header_get_removed_count (Header *header) { return header->removed_count; }
+int header_get_removed_count (RegistryHeader *header) { return header->removed_count; }
 
 /*
 	Simples função get, retorna o valor encapsulado (updated_count)
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
     Retorno:
         int -> a quantidade de registros atualizados
 */
-int header_get_updated_count (Header *header) { return header->updated_count; }
+int header_get_updated_count (RegistryHeader *header) { return header->updated_count; }
 
 /*
 	Simples função set, define o valor encapsulado (status).
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
         char new_status -> '0' = inconsistente, '1' = consistente
     Retorno: void
 */
-void header_set_status(Header *header, char new_status) {
+void header_set_status(RegistryHeader *header, char new_status) {
     //Validação de parâmetros
     if (header == NULL) {
         fprintf(stderr, "ERROR: (parameter) invalid null header @header_set_status()\n");
@@ -282,11 +282,11 @@ int _parse_counter(int current_value, int counter) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_next_RRN (Header *header, int new_value) {
+void header_set_next_RRN (RegistryHeader *header, int new_value) {
 	header->next_RRN = _parse_counter(header->next_RRN, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -298,11 +298,11 @@ void header_set_next_RRN (Header *header, int new_value) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_registries_count (Header *header, int new_value) {
+void header_set_registries_count (RegistryHeader *header, int new_value) {
 	header->registries_count = _parse_counter(header->registries_count, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -314,11 +314,11 @@ void header_set_registries_count (Header *header, int new_value) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_removed_count (Header *header, int new_value) {
+void header_set_removed_count (RegistryHeader *header, int new_value) {
 	header->removed_count = _parse_counter(header->removed_count, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -330,11 +330,11 @@ void header_set_removed_count (Header *header, int new_value) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        Header *header -> pointer para a struct referida.
+        RegistryHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void header_set_updated_count (Header *header, int new_value) {
+void header_set_updated_count (RegistryHeader *header, int new_value) {
 	header->updated_count = _parse_counter(header->updated_count, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.

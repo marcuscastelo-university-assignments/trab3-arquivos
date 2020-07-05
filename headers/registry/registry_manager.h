@@ -13,7 +13,7 @@
 
 typedef struct _registry_manager RegistryManager;
 
-RegistryManager *registry_manager_create(FILE *bin_file, Header *header);
+RegistryManager *registry_manager_create(FILE *bin_file, RegistryHeader *header);
 void registry_manager_delete(RegistryManager **manager_ptr);
 
 void registry_manager_seek(RegistryManager *manager, int RRN);

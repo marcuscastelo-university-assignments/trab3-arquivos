@@ -10,7 +10,7 @@ typedef struct reg_ll_node
     struct reg_ll_node *next;
 } RegistryLinkedListNode;
 
-//Header da lista ligada, contendo o primeiro, último nó e o tamanho da lista
+//RegistryHeader da lista ligada, contendo o primeiro, último nó e o tamanho da lista
 struct reg_linked_list_ {
     int size;
     RegistryLinkedListNode *first_node, *last_node;

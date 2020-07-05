@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "header.h"
+#include "registry_header.h"
 #include "data_manager.h"
 #include "binary_io.h"
 #include "registry_linked_list.h"
@@ -12,7 +12,7 @@ struct _data_manager {
     char *bin_file_name;
     FILE *bin_file;
     OPEN_MODE requested_mode;
-    Header *header;
+    RegistryHeader *header;
     RegistryManager *registry_manager;
 };
 

@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 #include "binary_io.h"
-#include "header.h"
+#include "binary_registry.h"
+#include "registry_header.h"
 #include "registry_utils.h"
 #include "registry.h"
 #include "string_utils.h"
@@ -17,7 +18,7 @@
 	e para diferenciacao de nivel de complexidade no programa
 */
 struct _registry_manager {
-	Header *header;			//Referência ao header gerenciado pelo DataManager
+	RegistryHeader *header;			//Referência ao header gerenciado pelo DataManager
 	FILE *bin_file;			//ponteiro do arquivo aberto e tendo seus registros gerenciados
 	int currRRN;			//RRN atual do ponteiro
 };
@@ -30,7 +31,7 @@ struct _registry_manager {
 	Retorno:
 		RegistryManager* . O gerenciador de registros.
 */
-RegistryManager *registry_manager_create(FILE *bin_file, Header *header) {
+RegistryManager *registry_manager_create(FILE *bin_file, RegistryHeader *header) {
 	//Tenta alocar memória
 	RegistryManager *manager = malloc(sizeof(RegistryManager));
 	if (manager == NULL) {

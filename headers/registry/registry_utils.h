@@ -1,5 +1,7 @@
 #pragma once
 
+#include "registry.h"
+
 #include "bool.h"
 
 void static_value_fill_with_garbage(char **value_ptr, int expectedSize);

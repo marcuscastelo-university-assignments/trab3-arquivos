@@ -2,11 +2,8 @@
 #define BINARYIO_H
 
 #include <stdio.h>
-#include "registry.h"
 
-void binary_update_registry(FILE *file, VirtualRegistry *updated_reg);
-void binary_write_registry(FILE *file, VirtualRegistry *reg_data);
-VirtualRegistry *binary_read_registry(FILE *file);
+#define REG_VARIABLE_FIELDS_TOTAL_SIZE 105
 
 void binary_write_int(FILE *file, int num);
 int binary_read_int(FILE *file);

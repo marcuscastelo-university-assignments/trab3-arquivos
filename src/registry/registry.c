@@ -1,6 +1,7 @@
 #include "registry.h"
 #include "string_utils.h"
 #include "registry_utils.h"
+#include "binary_registry.h"
 
 
 #include <stdlib.h>
