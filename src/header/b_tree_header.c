@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "binary_io.h"
 
-#define HEADER_GARBAGE_SIZE 111
+#define HEADER_GARBAGE_SIZE 55
 
 //TODO: checar se os comentários estão coerentes, visto que copiei do registry_header.c
 
@@ -47,7 +47,7 @@ BTHeader *b_tree_header_create(void) {
 
     //Marca que, em um momento oportuno, todos os headers devem ser escritos 
     header->changedMask = BTHMASK_ALL;
-    
+
     return header;
 }
 
@@ -64,7 +64,7 @@ void b_tree_header_delete(BTHeader **header_ptr) {
         fprintf(stderr, "ERROR: (parameter) invalid null pointer @b_tree_header_delete()\n");
         return;
     }
-    
+
     //Libera a memória
     #define header (*header_ptr)
     free(header);
@@ -107,7 +107,7 @@ void b_tree_header_write_to_bin(BTHeader *header, FILE *file) {
     offsets[3] = offsets[2] + 1 * sizeof(int);      //proxRRN
     offsets[4] = offsets[3] + 1 * sizeof(int);      //nroChaves
     offsets[5] = offsets[4] + 1 * sizeof(int);      //Lixo
-    
+
     //Código otimizado para o uso mínimo de fseeks, usando máscara de bits para decidir quais headers precisam ser atualizados
     /*
         Resumo da lógica: sempre dá fseek no primeiro header que precisar de alteração, 
