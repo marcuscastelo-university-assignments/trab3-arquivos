@@ -32,5 +32,17 @@ void binary_write_b_tree_node (FILE *file_ptr, BTreeNode *node) {
     if (file_ptr == NULL || node == NULL)
         return;
 
-    
-}
+    binary_write_int(file_ptr, b_tree_node_get_nivel(node));
+    binary_write_int(file_ptr, b_tree_node_get_n(node));
+
+    for (int i = 0; i < B_TREE_ORDER-1; i++) {
+        binary_write_int(file_ptr, b_tree_node_get_C(node, i));
+        binary_write_int(file_ptr, b_tree_node_get_Pr(node, i));
+    }
+
+    for (int i = 0; i < B_TREE_ORDER; i++) {
+        binary_write_int(file_ptr, b_tree_node_get_P(node, i));      
+    }
+
+    return;
+}   
