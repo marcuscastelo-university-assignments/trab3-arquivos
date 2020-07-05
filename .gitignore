@@ -1,0 +1,10 @@
+vgcore*
+*.o
+prog
+*.bin
+*.csv
+casos\ abertos/
+*.zip
+*.in
+*.out
+restorebin

@@ -1,0 +1,37 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "gcc build active file",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-g",
+                "${workspaceFolder}/src/binary/binary_io.c",
+                "${workspaceFolder}/src/csv/csv_reader.c",
+                "${workspaceFolder}/src/data_manager/data_manager.c",
+                "${workspaceFolder}/src/registry/registry.c",
+                "${workspaceFolder}/src/registry/registry_mask.c",
+                "${workspaceFolder}/src/registry/registry_array.c",
+                "${workspaceFolder}/src/registry/registry_linked_list.c",
+                "${workspaceFolder}/src/registry/registry_manager.c",
+                "${workspaceFolder}/src/registry/registry_utils.c",
+                "${workspaceFolder}/src/utils/string_utils.c",
+                "${workspaceFolder}/src/header/header.c",
+                "${workspaceFolder}/src/main.c",
+                "-o",
+                "${workspaceFolder}/prog",
+                "-I${workspaceFolder}/headers",
+                "-I${workspaceFolder}/headers/registry",
+                "-I${workspaceFolder}/headers/csv",
+                "-I${workspaceFolder}/headers/data_manager",
+                "-I${workspaceFolder}/headers/binary",
+                "-I${workspaceFolder}/headers/utils",
+                "-I${workspaceFolder}/headers/header"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            }
+        }
+    ],
+    "version": "2.0.0"
+}
