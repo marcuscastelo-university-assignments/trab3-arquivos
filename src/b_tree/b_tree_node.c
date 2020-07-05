@@ -78,9 +78,33 @@ int b_tree_node_get_n (BTreeNode *node) {
     return node->n;
 }
 
-int b_tree_node_get_item (BTreeNode *node, int pops) {
-    if (!node)
+int b_tree_node_get_C (BTreeNode *node, int position) {
+    if (node == NULL)
+        return -1;
 
+    if (position >= B_TREE_ORDER-1 || position < 0)
+        return -1;
+
+    return node->C[position];
 }
 
+int b_tree_node_get_Pr (BTreeNode *node, int position) {
+    if (node == NULL)
+        return -1;
+
+    if (position >= B_TREE_ORDER-1 || position < 0)
+        return -1;
+
+    return node->Pr[position];
+}
+
+int b_tree_node_get_P (BTreeNode *node, int position) {
+    if (node == NULL)
+        return -1;
+
+    if (position >= B_TREE_ORDER || position < 0)
+        return -1;    
+    
+    return node->P[position];
+}
 
