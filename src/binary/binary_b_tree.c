@@ -14,7 +14,7 @@ BTreeNode *binary_read_b_tree_node (FILE *file_ptr) {
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
         C = binary_read_int(file_ptr);
         Pr = binary_read_int(file_ptr);
-        b_tree_node_add_item(node, C, Pr);
+        b_tree_node_sorted_insert_item(node, C, Pr);
     }
 
     for (int i = 0; i < B_TREE_ORDER; i++) {
