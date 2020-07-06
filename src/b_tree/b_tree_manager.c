@@ -126,7 +126,7 @@ void b_tree_manager_seek_end(BTreeManager *manager) {
 		return;
 	}
 
-	int end = reg_header_get_next_RRN(manager->header);
+	int end = b_tree_header_get_proxRRN(manager->header);
 	b_tree_manager_seek(manager, end);
 }
 
@@ -140,11 +140,6 @@ void b_tree_manager_seek_end(BTreeManager *manager) {
 BTreeNode *b_tree_manager_read_current(BTreeManager *manager) {
 	if (manager == NULL) {
 		print_error("ERROR: invalid parameter @b_tree_manager_read_current()\n");
-		return NULL;
-	}
-
-	if (b_tree_manager_is_current_deleted(manager) == true) {	//verifica se o registro foi removido
-		b_tree_manager_jump_node(manager, FRONT);					//caso tenha sido removido, pula para o proximo registro
 		return NULL;
 	}
 
@@ -173,7 +168,7 @@ BTreeNode *b_tree_manager_read_at(BTreeManager *manager, int RRN) {
 
 
 /*
-	Funcao que escreve um registro onde o ponteiro esta. Precisa estar exatamente no 
+	Funcao que escreve um registro onde o ponteiro esta. Precisa estar exatamente no
 	comeco de um RRN para ser eficiente
 	Paramentros:
 		manager -> o gerenciador de registro que tera' um registro escrito em seu binario
@@ -186,7 +181,6 @@ void b_tree_manager_write_current(BTreeManager *manager, BTreeNode *node) {
 		return;
 	}
 
-	registry_prepare_for_write(node);					//faz o tratamento de campos invalidos
 	binary_write_b_tree_node(manager->bin_file, node);		//escreve no binario
 	manager->currRRN++;
 }
@@ -210,86 +204,51 @@ void b_tree_manager_write_at(BTreeManager *manager, int RRN, BTreeNode *node) {
 	b_tree_manager_write_current(manager, node);	//escreve no binario
 }
 
-
 /*
-	Funcao que deleta o registro onde o ponteiro esta'
-	Precisa estar exatamente no comeco do registro para ser eficiente
-	Parametros:
-		manager -> o gerenciador de registro que tera' o registro deletado em seu binario
-	Retorno: void
+
 */
-void b_tree_manager_delete_current (BTreeManager *manager) {
+void b_tree_manager_insert(BTreeManager *manager, int idNascimento, int RRN) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @b_tree_manager_delete_current()\n");
+		return;
+	}
+}
+
+int b_tree_manager_search_for (BTreeManager *manager, int idNascimento) {
+	if (manager == NULL) {
 		return;
 	}
 
-	binary_write_int(manager->bin_file, -1);	//escreve o indicador de registro deletado: -1
-	
-	fseek(manager->bin_file, REG_SIZE-sizeof(int), SEEK_CUR); //faz o seek para ir para o final do registro
+	BTreeNode *node;
+	int nodeRRN = b_tree_header_get_noRaiz(manager->header);
 
-	manager->currRRN++;
-}
+	while (nodeRRN != -1) {
+		node = b_tree_manager_read_at(manager, nodeRRN);
+		if (node == NULL)
+			break;
+		//i = 0, 1, 2, 3,  4
+		//C = 2, 4, 7, 8, 10
+		//Pr= 1, 2, 3, 4,  5, 6
 
 
-/*
-	Deleta um registro em um RRN dado
-	Paramentros:
-		manager -> o gerenciador de registro que tera' um registro deletado em seu binario
-		RRN -> RRN do local onde sera deletado o registro
-	Retorno: void
-*/
-void b_tree_manager_delete_at (BTreeManager *manager, int RRN) {
-	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @b_tree_manager_delete_at()\n");
-		return;
+
+		bool enteredBeforeNodeEnd = false;
+		for (int i = 0; i < B_TREE_ORDER-1; i++) {
+			int C = b_tree_node_get_C(node, i);
+
+			if (C == -1 || idNascimento < C) {
+				nodeRRN = b_tree_node_get_P(node, i);
+				enteredBeforeNodeEnd = true;
+				break;
+			}
+
+			else if (idNascimento == C)
+				return b_tree_node_get_Pr(node, i);
+		}
+
+		//Se não tiver entrado ainda (já chegamos no fim do nó), força a entrada à direita
+		if (!enteredBeforeNodeEnd)
+			nodeRRN = b_tree_node_get_P(node, B_TREE_ORDER-1);
 	}
 
-	b_tree_manager_seek(manager, RRN);		//faz o seek do RRN
-	b_tree_manager_delete_current(manager);	//deleta o registro
-}
-
-
-/*
-	Verifica se o registro onde o ponteiro esta foi deletado
-	Precisa estar no comeco do registro para ser eficiente
-	Parametros:
-		manager -> o gerenciador de registros que tera' seu registro verificado
-	Retorno:
-		bool.
-		true, caso o registro esteja deletado
-		false, caso contrario 
-*/
-bool b_tree_manager_is_current_deleted (BTreeManager *manager) {
-	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @b_tree_manager_is_current_deleted()\n");
-		return false;
-	}
-
-	int N = binary_read_int(manager->bin_file);
-
-	fseek(manager->bin_file, -sizeof(int), SEEK_CUR); //volta para o inicio do registro, para a posicao antes de ler o numero
-	
-	return (N == -1) ? true : false;
-}
-
-
-/*
-	Funcao que pula os bytes de um registro (128 bytes) em uma determinada direcao
-	Parametros:
-		manager -> o gerenciador de registros que tera seu ponteiro alterado
-		direction: 
-				  -> FRONT : pula +128 bytes (expands to +1)
-				  -> BACK  : pula -128 bytes (expands to -1)
-	Retorno: void
-*/
-void b_tree_manager_jump_node (BTreeManager *manager, int direction) {
-	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @b_tree_manager_jump_node()\n");
-		return;
-	}
-
-	fseek(manager->bin_file, REG_SIZE*direction, SEEK_CUR); //faz o seek para de +-128 bytes, pulando um registro pra frente ou pra tras 
-	
-	manager->currRRN += direction;
+	return -1;
 }
