@@ -45,7 +45,7 @@ void data_manager_delete(DataManager **manager_ptr);
 bool data_manager_is_file_consistent(DataManager *manager);
 
 void data_manager_insert_arr_at_end(DataManager *manager, VirtualRegistry **reg_data_arr, int arr_size);
-void data_manager_insert_at_end(DataManager *manager, VirtualRegistry *reg_data);
+int data_manager_insert_at_end(DataManager *manager, VirtualRegistry *reg_data);
 
 VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *match_terms);
 VirtualRegistry *data_manager_fetch_at(DataManager *manager, int RRN);

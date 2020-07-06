@@ -245,11 +245,12 @@ void data_manager_insert_arr_at_end(DataManager *manager, VirtualRegistry **reg_
  *  Adiciona um registro ao fim do arquivo.
  *  Parâmetros:
  *      DataManager *manager -> gerenciador que possui o arquivo referido aberto
- *  Retorno: void
+ *  Retorno: int - RRN no qual o registro foi inserido
  */
-void data_manager_insert_at_end(DataManager *manager, VirtualRegistry *reg_data) {
+int data_manager_insert_at_end(DataManager *manager, VirtualRegistry *reg_data) {
     //Inserir um registro é apenas um caso especial de inserir um vetor de tamanho 1
     data_manager_insert_arr_at_end(manager, &reg_data, 1);
+    return reg_header_get_next_RRN(manager->header) - 1;
 }
 
 
@@ -274,7 +275,7 @@ VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *
     if (manager->bin_file == NULL) {
         fprintf(stderr, "ERROR: DataManager haven't opened the binary file @data_manager_fetch()\n");
         return NULL;
-    } 
+    }
 
     int registriesCounter = reg_header_get_registries_count(manager->header);
 
@@ -285,7 +286,7 @@ VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *
         return NULL;
     }
 
-    //Se não houverem registros, não há porque der fseek   
+    //Se não houverem registros, não há porque der fseek
     if (registriesCounter > 0)
         registry_manager_seek_first(manager->registry_manager);
 

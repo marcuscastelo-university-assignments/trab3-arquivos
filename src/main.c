@@ -12,6 +12,7 @@
 #include <signal.h>
 
 #include "data_manager.h"
+#include "b_tree_manager.h"
 
 #include "csv_reader.h"
 
@@ -22,6 +23,14 @@
 #include "bool.h"
 
 #define print_erro(x) fprintf(stderr, x);
+
+typedef struct _Funcionalidade6ExtensionInfo
+{
+    FILE *b_tree_file_stream;
+    int idNascimento, RRN;
+    void (*callback)(struct _Funcionalidade6ExtensionInfo *info);
+} Funcionalidade6ExtensionInfo;
+
 
 /**
  *  Função de exibição de erro padronizada de acordo com as especificações
@@ -352,13 +361,14 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
 }
 
 /*
-    Funcionalidade 5: Inserir novo registro, ignorando espaços livres por deleção (abordagem de deleção estática)
+    Funcionalidade 6: Inserir novo registro, ignorando espaços livres por deleção (abordagem de deleção estática)
     Parâmetros:
         char *bin_filename -> nome do arquivo binario
         char *n_str -> string contendo a quantidade (int) de registros a serem inseridos
     Retorno: void
 */
-void funcionalidade6 (char *bin_filename, char *n_str) {
+
+void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionInfo *extInfo) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
         print_erro("ERROR: invalid filename @funcionalidade6()\n");
@@ -388,7 +398,6 @@ void funcionalidade6 (char *bin_filename, char *n_str) {
     char *campos[] = {"cidadeMae","cidadeBebe","idNascimento","idadeMae","dataNascimento","sexoBebe","estadoMae","estadoBebe"}; 
 
     int n = atoi(n_str);
-    RegistryLinkedList *list = registry_linked_list_create();
     VirtualRegistry *reg_data;
     char *value_tmp = NULL;
     for (int i = 0; i < n; i++)
@@ -402,19 +411,17 @@ void funcionalidade6 (char *bin_filename, char *n_str) {
             free(value_tmp);
 
         }
-        registry_linked_list_insert(list, reg_data);
+        int insertedRRN = data_manager_insert_at_end(data_manager, reg_data);
+        if (extInfo != NULL && extInfo->callback != NULL) {
+            extInfo->idNascimento = reg_data->idNascimento;
+            extInfo->RRN = insertedRRN;
+            extInfo->callback(extInfo);
+        }
     }
-
-    VirtualRegistryArray *array = registry_linked_list_to_array(list);
-    registry_linked_list_delete(&list, false);
-
-    data_manager_insert_arr_at_end(data_manager, array->data_arr, array->size);
-    virtual_registry_array_delete(&array);   
 
     data_manager_delete(&data_manager);
     binarioNaTela(bin_filename);
 }
-
 
 /*
     Funcionalidade 7: Atualizar um registro pelo seu RRN
@@ -477,6 +484,34 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
     binarioNaTela(bin_filename);
 }
 
+//TODO: comment
+void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
+    //Validação de parâmetros
+    if (bin_filename == NULL) {
+        print_erro("ERROR: invalid filename @funcionalidade8()\n");
+        return;
+    }
+    
+    if (b_tree_filename == NULL) {
+        print_erro("ERROR: invalid parameter @funcionalidade8()\n");
+        return;
+    }
+}
+
+void funcionalidade9 (char *bin_filename, char *n_str, char *field, char *value) {
+
+}
+
+void funcionalidade10 (Funcionalidade6ExtensionInfo *info) {
+    FILE *stream = info->b_tree_file_stream;
+    BTHeader *header = b_tree_header_create();
+    b_tree_header_read_from_bin(header, stream);
+    BTreeManager *manager = b_tree_manager_create(stream, header);
+
+    //TODO: Inserir
+    // b_tree_manager_write_at(manager, info->RRN, );
+}
+
 
 /**
  *  Inicializa um vetor de parâmetros lidos do stdin
@@ -537,58 +572,82 @@ int main(void) {
     //Entrada esperada para o programa: <funcionalidade_code> param1,[param2,param3...]
 
     //Código da funcionalidade desejada
-    char funcionalidade_code;
+    int funcionalidade_code;
 
     //Parâmetros, são inicializados dentro do switch por serem de tamanho variável
     char **params = NULL;
 
     //Lê o código de funcionalidade
-    scanf("%c", &funcionalidade_code);
+    scanf("%d", &funcionalidade_code);
 
     //Decide qual função usar baseado na funcionalidade escolhida
     switch (funcionalidade_code) {
         //Para cada funcionalidade: lê os n parâmetros e chama a função com estes.
-        case '1':
+        case 1:
             params = init_params(2); //n = 2
             funcionalidade1(params[0], params[1]);
             free_params(&params, 2);
             break;
             
-        case '2':
+        case 2:
             params = init_params(1); //n = 1
             funcionalidade2(params[0]);
             free_params(&params, 1);
             break;
             
-        case '3':
+        case 3:
             params = init_params(1);
             funcionalidade3(params[0]);
             free_params(&params, 1);
             break;
 
-        case '4':
+        case 4:
             params = init_params(2);
             funcionalidade4(params[0], params[1]);
             free_params(&params, 2);
             break;
 
-        case '5':
+        case 5:
             params = init_params(2);
             funcionalidade5(params[0], params[1]);
             free_params(&params, 2);
             break;
 
-        case '6':
+        case 6:
             params = init_params(2);
-            funcionalidade6(params[0], params[1]);
+            funcionalidade6(params[0], params[1], NULL);
             free_params(&params, 2);
             break;
         
-        case '7':
+        case 7:
             params = init_params(2);
             funcionalidade7(params[0], params[1]);
             free_params(&params, 2);
             break;
+
+        case 8:
+            params = init_params(2);
+            funcionalidade8(params[0], params[1]);
+            free_params(&params, 2);
+            break;
+
+        case 9:
+            params = init_params(4);
+            funcionalidade9(params[0], params[1], params[2], params[3]);
+            free_params(&params, 4);
+            break;
+
+        case 10:
+            params = init_params(2);
+            Funcionalidade6ExtensionInfo extensionInfo;
+            extensionInfo.b_tree_file_stream = fopen("foda", "rb+");
+            extensionInfo.callback = funcionalidade10;
+            funcionalidade6(params[0], params[1], &extensionInfo);
+
+            fclose(extensionInfo.b_tree_file_stream);
+            free_params(&params, 2);
+            break;
+
         default:
             printf("Funcionalidade %c não implementada.\n", funcionalidade_code);
             break;
