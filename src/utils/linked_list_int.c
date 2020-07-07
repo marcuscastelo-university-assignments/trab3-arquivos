@@ -1,4 +1,4 @@
-#include "linked_list_primitive.h"
+#include "linked_list_int.h"
 
 #include <stdio.h>
 #include <stdlib.h>

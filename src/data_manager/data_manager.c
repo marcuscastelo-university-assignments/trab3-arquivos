@@ -115,6 +115,9 @@ OPEN_RESULT data_manager_open(DataManager *manager, OPEN_MODE mode) {
     //Validação dos parâmetros, informando o código do problema por meio de um enum
     if (manager == NULL) return OPEN_INVALID_ARGUMENT;
 
+    //Guarda o modo de abertura para uso em outras funções
+    manager->requested_mode = mode;
+
     //Abre o arquivo binário no modo selecionado (ler os modos)
     manager->bin_file = fopen(manager->bin_file_name, mode_to_str[mode]);
 
@@ -145,9 +148,6 @@ OPEN_RESULT data_manager_open(DataManager *manager, OPEN_MODE mode) {
             reg_header_write_to_bin(manager->header, manager->bin_file);
         }
     }
-
-    //Guarda o modo de abertura para uso em outras funções
-    manager->requested_mode = mode;
     
     return OPEN_OK;
 }
@@ -277,15 +277,11 @@ VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *
         void _callback(DataManager *manager, VirtualRegistry *registry) {
             //Verifica se, dentro da máscara informada, o registro atual atende aos termos de busca e o adiciona na lista em caso positivo
             if (virtual_registry_compare(registry, search_terms) == true)
-                registry_linked_list_insert(list, registry);
-            else //Se não, libera a memória neste momento, já que não haverá mais referências ao registro 
-                virtual_registry_delete(&registry);
+                registry_linked_list_insert(list, virtual_registry_create_copy(registry));
         } _callback;
     });
 
-    data_manager_for_each(manager, innerCallback);
-
-        
+    data_manager_for_each(manager, innerCallback);        
 
     //Converte a lista ligada para uma struct que guarda um vetor e seu tamanho
     VirtualRegistryArray *reg_data_array = registry_linked_list_to_array(list);
@@ -333,7 +329,7 @@ void data_manager_for_each_match(DataManager *manager, VirtualRegistryArray *mat
     }
 
     //Validação de parâmetros
-    if (manager == NULL || match_conditions == NULL) {
+    if (manager == NULL) {
         fprintf(stderr, "ERROR: (parameter) invalid parameter @data_manager_remove_matches()\n");
         return;
     }
@@ -344,11 +340,10 @@ void data_manager_for_each_match(DataManager *manager, VirtualRegistryArray *mat
     //Move o cursor para o primeiro registro
     registry_manager_seek_first(reg_man);
 
-    int reg_count = reg_header_get_registries_count(manager->header);
-    for (int i = 0; i < reg_count;) {
+    int reg_count = reg_header_get_registries_count(manager->header) + reg_header_get_removed_count(manager->header);
+    for (int i = 0; i < reg_count; i++) {
         VirtualRegistry *reg_data = registry_manager_read_current(reg_man);
 
-        //Se o registro era um deletado, não conte i++
         if (reg_data == NULL) continue;
 
         //Verifica se o registro atual se encaixa em um dos termos de busca. Se sim, chame o callback
@@ -358,9 +353,6 @@ void data_manager_for_each_match(DataManager *manager, VirtualRegistryArray *mat
 
         //Libera a memória do registro na RAM
         virtual_registry_delete(&reg_data);
-
-        //i++ somente se o registro não era deletado
-        i++;
     }
 
     #undef reg_man

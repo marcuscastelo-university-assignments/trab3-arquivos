@@ -7,6 +7,29 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+//TODO: comentar e usar mais vezes?
+VirtualRegistry *virtual_registry_create_copy(VirtualRegistry *base) {
+    VirtualRegistry *reg_data = virtual_registry_create();
+    
+    if (reg_data == NULL) {
+        fprintf(stderr, "ERROR: Insuficient memory on virtual_registry_create_copy()\n");
+        return NULL;
+    }
+    
+    if (base->cidadeBebe != NULL) reg_data->cidadeBebe = strdup(base->cidadeBebe);
+    if (base->cidadeMae != NULL) reg_data->cidadeMae = strdup(base->cidadeMae);
+    if (base->dataNascimento != NULL) reg_data->dataNascimento = strdup(base->dataNascimento);
+    if (base->estadoBebe != NULL) reg_data->estadoBebe = strdup(base->estadoBebe);
+    if (base->estadoMae != NULL) reg_data->estadoMae = strdup(base->estadoMae);
+    reg_data->idadeMae = base->idadeMae;
+    reg_data->idNascimento = base->idNascimento;
+    reg_data->sexoBebe = base->sexoBebe;
+    reg_data->fieldMask = base->fieldMask;
+
+    return reg_data;
+}
+
 /**
  *   Funçao que aloca uma struct que representa o registro do tipo cheio (Ler tipos de registro na struct do .h).
  *   Parametros:
@@ -91,7 +114,7 @@ void virtual_registry_set_field(VirtualRegistry *reg_data, char *field_name, cha
         return;
     }
     
-    //Compara o parâmetro com o nome dos campos do registro, atribuindo se for encontrado
+    //Compara o parâmetro com o nome dos campos do registro, atribuindo se for encontrado (dá free em caso de redefinição de string)
     if (!strcmp(field_name, "cidadeBebe")) {
         free(reg_data->cidadeBebe);
         reg_data->cidadeBebe = strdup(field_value);
@@ -122,13 +145,13 @@ void virtual_registry_set_field(VirtualRegistry *reg_data, char *field_name, cha
         return;
     }
     
-    if (!strcmp(field_name, "idNascimento")){
+    if (!strcmp(field_name, "idNascimento")){ //Supõe-se que o idNascimento não terá valor inválido
         reg_data->idNascimento = atoi(field_value);
         return;
     }
 
     if (!strcmp(field_name, "idadeMae")){
-        reg_data->idadeMae = atoi(field_value);
+        reg_data->idadeMae = (!strcmp(field_value, "") ? -1 : atoi(field_value));
         return;
     }
     
@@ -265,7 +288,7 @@ char *virtual_registry_read_value_from_input(char *field_name) {
         return NULL;
     }
     
-    char *valor;
+    char *valor = NULL;
     if (!strcmp("idadeMae", field_name) || !strcmp("idNascimento", field_name))
         scanf(" %ms", &valor);
     else

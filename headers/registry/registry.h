@@ -33,6 +33,7 @@ typedef struct _virtual_registry VirtualRegistry;
 typedef struct _virtual_registry VirtualRegistryFilter;
 typedef struct _virtual_registry VirtualRegistryUpdater;
 
+VirtualRegistry *virtual_registry_create_copy(VirtualRegistry *base);
 VirtualRegistry *virtual_registry_create();
 VirtualRegistry *virtual_registry_create_masked(RegistryFieldsMask compareFields);
 

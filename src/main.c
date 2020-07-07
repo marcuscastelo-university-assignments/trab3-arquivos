@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <signal.h>
 
@@ -107,7 +108,7 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
 }
 
 void _DMForeachCallback_print_register(DataManager *manager, VirtualRegistry *registry) {
-
+    virtual_registry_print(registry);
 }
 
 /* 
@@ -288,10 +289,16 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = data_manager_open(data_manager, MODIFY);
-    if (open_result != OPEN_OK) {
+
+    if (open_result == OPEN_EMPTY) {
         data_manager_delete(&data_manager);
-        print_data_manager_open_result_message(open_result);
         binarioNaTela(bin_filename);
+        return;
+    }
+
+    if (open_result != OPEN_OK && open_result != OPEN_EMPTY) { //De acordo com os casos de teste, o arquivo vazio deve ser tratado sem mensagem de erro para essa funcionalidade
+        print_data_manager_open_result_message(open_result);
+        data_manager_delete(&data_manager);
         return;
     }
 
@@ -373,7 +380,7 @@ void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionI
 
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = data_manager_open(data_manager, MODIFY);
-    if (open_result != OPEN_OK) {
+    if (open_result != OPEN_OK && open_result != OPEN_EMPTY) {
         data_manager_delete(&data_manager);
         print_data_manager_open_result_message(open_result);
         return;

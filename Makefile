@@ -18,7 +18,8 @@ $(SRC_RULES):
 	@ $(COMP) -c $(SRC)/$@/*.c $(INC) $(FLAGS)
 
 zip:
-	@ zip -r trab2.zip src headers Makefile
+	@ rm trab3.zip 2>/dev/null || cat < /dev/null
+	@ zip -r trab3.zip src headers Makefile
 
 deb: all
 	./prog < 1.in > 1.out
