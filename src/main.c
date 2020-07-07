@@ -13,6 +13,7 @@
 
 #include "data_manager.h"
 #include "b_tree_manager.h"
+#include "b_tree_node.h"
 
 #include "csv_reader.h"
 
@@ -544,7 +545,20 @@ void free_params(char ***params_ptr, int quantity) {
     #undef params
 }
 
-
+void teste () {
+    BTreeNode *node = b_tree_node_create(1);
+    for (int i = 0; i < B_TREE_ORDER-1; i++) {
+        b_tree_node_sorted_insert_item(node, i*2, i);
+        b_tree_node_insert_P(node, i, 0);
+    }
+    b_tree_node_insert_P(node, 10, B_TREE_ORDER-1);
+    b_tree_node_print(node);
+    printf("\n");
+    BTreeNode *new = b_tree_node_split_one_to_two(node, 3, 9, 20);
+    b_tree_node_print(node);
+    printf("\n");
+    b_tree_node_print(new);
+}
 /**
  *  Função principal: responsável por guiar o fluxo do programa separado por funcionalidades
  *  Lê um caractere representando a funcionalidade. Depois, lê n parâmetros e passa eles para a funcionalidade especificada
@@ -629,6 +643,10 @@ int main(void) {
 
             fclose(extensionInfo.b_tree_file_stream);
             free_params(&params, 2);
+            break;
+
+        case 0:
+            teste();
             break;
 
         default:

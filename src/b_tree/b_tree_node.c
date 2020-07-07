@@ -51,6 +51,7 @@ void b_tree_node_set_nivel (BTreeNode *node, int nivel) {
 }
 
 bool b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
+    
     if (node == NULL)
         return false;
     
@@ -61,9 +62,10 @@ bool b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
         if (node->C[i] == -1) {
             node->C[i] = C;
             node->Pr[i] = Pr;
+            break;
         }
 
-        if (node->C[i] > C) {
+        else if (node->C[i] > C) {
             for (int j = B_TREE_ORDER-3; j >= i; j--) {
                 node->C[j+1] = node->C[j];
                 node->Pr[j+1] = node->Pr[j];
@@ -87,9 +89,9 @@ void b_tree_node_set_item (BTreeNode *node, int C, int Pr, int position) {
     if (position >= B_TREE_ORDER-1 || position < 0)
         return;
 
+    if (node->C[position] == -1) node->n++;
     node->C[position] = C;
     node->Pr[position] = Pr;
-    node->n++;
 
     return;
 }
@@ -171,6 +173,8 @@ void b_tree_node_remove_item (BTreeNode *node, int position) {
 
     if (position >= B_TREE_ORDER-1 || position < 0)
         return;
+        
+    if (node->C[position] != -1) node->n--;
 
     for (int i = position; i < B_TREE_ORDER-1-1; i++) {
         node->C[i] = node->C[i+1];
@@ -180,7 +184,6 @@ void b_tree_node_remove_item (BTreeNode *node, int position) {
     node->C[B_TREE_ORDER-2] = -1;
     node->Pr[B_TREE_ORDER-2] = -1;
 
-    node->n--;
 
     return;
 }
@@ -202,6 +205,17 @@ void b_tree_node_remove_P (BTreeNode *node, int position) {
 }
 
 ////////////
+void b_tree_node_update_n (BTreeNode *node) {
+    int n = 0;
+    for (int i = 0; i < B_TREE_ORDER-1; i++) {
+        if (node->C[i] != -1)
+            n++;
+    }
+    node->n = n;
+
+    return;
+}
+
 int b_tree_node_get_RRN_that_fits (BTreeNode *node, int key) {
     if (node == NULL)
         return -1;
@@ -231,24 +245,27 @@ int b_tree_node_get_RRN_that_fits (BTreeNode *node, int key) {
     return nodeRRN;
 }
 
+void print_vec (char *name, int *vec, int size) {
+    printf("%s: ", name);
+    for (int i = 0; i < size; i++)
+        printf("%d ", vec[i]);
+    printf("\n");
+}
+
 int insertion_sort_insert_in_array (int *arr, int size, int value) {
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < size-1; i++) {
         if (value < arr[i]) {
             for (int j = size-2; j >= i; j--) {
                 arr[j+1] = arr[j];
             }
 
-            arr[i] = size;
+            arr[i] = value;
             return i;
         }
     }
 
-    return -1;
-}
-
-int min (int a, int b) {
-    if (a < b) return a;
-    return b;
+    arr[size-1] = value;
+    return size-1;
 }
 
 /*
@@ -261,26 +278,30 @@ BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P)
     int *newPr = (int*) malloc (sizeof(int) * B_TREE_ORDER);
     int *newP = (int*) malloc (sizeof(int) * B_TREE_ORDER+1);
 
+    //copying values from parent
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
         newC[i] = b_tree_node_get_C(parent, i);
         newPr[i] = b_tree_node_get_Pr(parent, i);
     }
-
+    
+    //inserting C in right position
     int position = insertion_sort_insert_in_array(newC, B_TREE_ORDER, C);
+    //inserting Pr in right position
     for (int i = B_TREE_ORDER-2; i >= position; i--) {
         newPr[i+1] = newPr[i];
     }
     newPr[position] = Pr;
 
+    //inserting P in right position
     for (int i = 0; i < B_TREE_ORDER; i++) {
         newP[i] = b_tree_node_get_P(parent, i);
     }
-    for (int i = B_TREE_ORDER-1; i >= position+1; i++) {
+    for (int i = B_TREE_ORDER-1; i >= position+1; i--) {
         newP[i+1] = newP[i];
     }
     newP[position+1] = P;
 
-    //inserting in old
+    //setting item in old
     for (int i = 0; i < B_TREE_ORDER/2; i++) {
         b_tree_node_set_item(parent, newC[i], newPr[i], i);
     }
@@ -288,10 +309,27 @@ BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P)
         b_tree_node_remove_item(parent, B_TREE_ORDER/2);
     }
 
-    //inserting in new
+    //setting item in new
     for (int i = B_TREE_ORDER/2; i < B_TREE_ORDER; i++) {
         b_tree_node_sorted_insert_item(new, newC[i], newPr[i]);
     }
+
+    //setting P in new
+    for (int i = 0; i < B_TREE_ORDER/2+1; i++) {
+        b_tree_node_set_P(parent, newP[i], i);
+    }
+    for (int i = B_TREE_ORDER/2+1; i < B_TREE_ORDER; i++) {
+        b_tree_node_set_P(parent, -1, i);
+    }
+    
+    //setting P in old
+    for (int i = B_TREE_ORDER/2+1; i < B_TREE_ORDER+1; i++) {
+        b_tree_node_insert_P(new, newP[i], 0);
+    }
+
+    free(newC);
+    free(newPr);
+    free(newP);
 
     return new; 
 }

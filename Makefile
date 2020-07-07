@@ -9,6 +9,7 @@ all: $(SRC_RULES)
 	@ $(COMP) *.o $(SRC)/main.c -o prog $(INC) $(FLAGS) && \
 	echo 'Compiled Successfully' || \
 	echo 'There were compilation errors'
+	@ rm *.o
 
 run:
 	./prog
