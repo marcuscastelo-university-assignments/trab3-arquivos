@@ -7,7 +7,7 @@
 #include "b_tree_header.h"
 #include "b_tree_node.h"
 
-
+typedef struct _pair pair;
 typedef struct _b_tree_manager BTreeManager;
 
 BTreeManager *b_tree_manager_create(FILE *bin_file, BTHeader *header);
@@ -22,7 +22,7 @@ BTreeNode *b_tree_manager_read_at(BTreeManager *manager, int RRN);
 void b_tree_manager_write_current(BTreeManager *manager, BTreeNode *node);
 void b_tree_manager_write_at(BTreeManager *manager, int RRN, BTreeNode *node);
 
-void b_tree_manager_split_child(BTreeManager *manager, BTreeNode *parent, int childIndex);
+
 
 
 #endif  //!__B_TREE_MANAGER__H__

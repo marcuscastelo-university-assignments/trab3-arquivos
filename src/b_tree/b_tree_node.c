@@ -29,7 +29,7 @@ BTreeNode* b_tree_node_create (int nivel) {
     return bTreeNode; 
 }
 
-void b_tree_node_f (BTreeNode *node) {
+void b_tree_node_free (BTreeNode *node) {
     if (node == NULL)
         return;
 
@@ -69,6 +69,7 @@ bool b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
 
             node->C[i] = C;
             node->Pr[i] = Pr;
+            break;
         }
     }
 
@@ -91,16 +92,15 @@ void b_tree_node_set_item (BTreeNode *node, int C, int Pr, int position) {
     return;
 }
 
-void b_tree_node_push_back_P (BTreeNode *node, int P) {
+void b_tree_node_insert_P (BTreeNode *node, int P, int position) {
     if (node == NULL)
         return;
 
-    for (int i = 0; i < B_TREE_ORDER; i++) {
-        if (node->P[i] == -1) {
-            node->P[i] = P;
-            break;
-        }
+    for (int i = B_TREE_ORDER-2; i >= position; i--) {
+        node->P[i+1] = node->P[i]; 
     }
+
+    node->P[position] = P;
 
     return;
 }
@@ -178,6 +178,8 @@ void b_tree_node_remove_item (BTreeNode *node, int position) {
     node->C[B_TREE_ORDER-2] = -1;
     node->Pr[B_TREE_ORDER-2] = -1;
 
+    node->n--;
+
     return;
 }
 
@@ -193,6 +195,121 @@ void b_tree_node_remove_P (BTreeNode *node, int position) {
     }
 
     node->P[B_TREE_ORDER-1] = -1;
+
+    return;
+}
+
+////////////
+int b_tree_node_get_RRN_that_fits (BTreeNode *node, int key) {
+    if (node == NULL)
+        return -1;
+
+    bool enteredBeforeNodeEnd = false;
+    for (int i = 0; i < B_TREE_ORDER-1; i++) {
+        int C = b_tree_node_get_C(node, i);
+
+        if (C == -1 || key < C) {
+            nodeRRN = b_tree_node_get_P(node, i);
+            enteredBeforeNodeEnd = true;
+            break;
+        }
+
+        else if (key == C) {
+            nodeRRN = -2;
+            break;
+        }  
+    }
+
+    //Se não tiver entrado ainda (já chegamos no fim do nó), força a entrada à direita
+    if (!enteredBeforeNodeEnd)
+        nodeRRN = b_tree_node_get_P(node, B_TREE_ORDER-1);
+
+    return nodeRRN;
+}
+
+int insertion_sort_insert_in_array (int *arr, int size, int value) {
+    for (int i = 0; i < size; i++) {
+        if (value < arr[i]) {
+            for (int j = size-2; j >= i; j--) {
+                arr[j+1] = arr[j];
+            }
+
+            arr[i] = size;
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+int min (int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+/*
+
+*/
+BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P) {
+	BTreeNode *new = b_tree_node_create(b_tree_node_get_nivel(parent));
+
+    int *newC = (int*) malloc (sizeof(int) * B_TREE_ORDER);
+    int *newPr = (int*) malloc (sizeof(int) * B_TREE_ORDER);
+    int *newP = (int*) malloc (sizeof(int) * B_TREE_ORDER+1);
+
+    for (int i = 0; i < B_TREE_ORDER-1; i++) {
+        newC[i] = b_tree_node_get_C(parent);
+        newPr[i] = b_tree_node_get_Pr(parent);
+    }
+
+    int position = insertion_sort_insert_in_array(newC, B_TREE_ORDER, C);
+    for (int i = B_TREE_ORDER-2; i >= position; i--) {
+        newPr[i+1] = newPr[i];
+    }
+    newPr[position] = Pr;
+
+    for (int i = 0; i < B_TREE_ORDER; i++) {
+        newP[i] = b_tree_node_get_P(parent, i);
+    }
+    for (int i = B_TREE_ORDER-1; i >= position+1; i++) {
+        newP[i+1] = newP[i];
+    }
+    newP[position+1] = P;
+
+    //inserting in old
+    for (int i = 0; i < B_TREE_ORDER/2; i++) {
+        b_tree_node_set_item(parent, newC[i], newPr[i], i);
+    }
+    for (int i = B_TREE_ORDER/2; i < B_TREE_ORDER-1; i++) {
+        b_tree_node_remove_item(parent, B_TREE_ORDER/2);
+    }
+
+    //inserting in new
+    for (int i = B_TREE_ORDER/2; i < B_TREE_ORDER; i++) {
+        b_tree_node_sorted_insert_item(new, newC[i], newPr[i]);
+    }
+
+    return new; 
+}
+
+void b_tree_node_print (BTreeNode *node) {
+    if (node == NULL) {
+        printf("No node to print\n");
+        return;
+    }
+
+    printf("Nivel: %d\n", b_tree_node_get_nivel(node));
+    printf("N: %d\n", b_tree_node_get_n(node));
+    printf("C:");
+    for (int i = 0; i < B_TREE_ORDER-1; i++)
+        printf("%d ", b_tree_node_get_C(node, i));
+    printf("\nPr: ");
+    for (int i = 0; i < B_TREE_ORDER-1; i++)
+        printf("%d ", b_tree_node_get_Pr(node, i));
+    printf("\nP: ");
+    for (int i = 0; i < B_TREE_ORDER; i++)
+        printf("%d ", b_tree_node_get_P(node, i));
+    printf("\n");
 
     return;
 }

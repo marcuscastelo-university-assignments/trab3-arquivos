@@ -1,18 +1,19 @@
 INC = $(foreach i,$(shell find ./headers -type d),$(shell echo "-I $i"))
 SRC = ./src
 COMP = gcc
+FLAGS = -Wall -g
 
 SRC_RULES = binary header registry data_manager utils csv b_tree
 
 all: $(SRC_RULES)
-	$(COMP) *.o $(SRC)/main.c -o prog $(INC) -Wall
+	$(COMP) *.o $(SRC)/main.c -o prog $(INC) $(FLAGS)
 	rm *.o
 
 run:
 	./prog
 
 $(SRC_RULES):
-	$(COMP) -c $(SRC)/$@/*.c $(INC)
+	$(COMP) -c $(SRC)/$@/*.c $(INC) $(FLAGS)
 
 zip:
 	zip -r trab2.zip src headers Makefile

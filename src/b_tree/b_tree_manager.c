@@ -13,6 +13,11 @@
 
 #define REG_SIZE 72
 
+struct _pair {
+	int key;
+	int RRN;
+};
+
 /*
 	Struct que representa o gerenciador de registros, usada para debug
 	e para diferenciacao de nivel de complexidade no programa
@@ -113,7 +118,6 @@ void b_tree_manager_seek_first(BTreeManager *manager) {
 	b_tree_manager_seek(manager, 0);
 }
 
-
 /*
 	Funcao que faz fseek para o ultimo registro
 	Parametros:
@@ -147,7 +151,6 @@ BTreeNode *b_tree_manager_read_current(BTreeManager *manager) {
 	return binary_read_b_tree_node(manager->bin_file);
 }
 
-
 /*
 	Funcao que le um registro em um RRN dado
 	Parametros:
@@ -165,7 +168,6 @@ BTreeNode *b_tree_manager_read_at(BTreeManager *manager, int RRN) {
 	b_tree_manager_seek(manager, RRN);			//faz o seek do RRN
 	return b_tree_manager_read_current(manager);	//le o registro e retorna
 }
-
 
 /*
 	Funcao que escreve um registro onde o ponteiro esta. Precisa estar exatamente no
@@ -207,12 +209,71 @@ void b_tree_manager_write_at(BTreeManager *manager, int RRN, BTreeNode *node) {
 /*
 
 */
+pair recursive_insert(BTreeManager *manager, BTreeNode *node, int idNascimento, int RRN) {
+	int n = b_tree_node_get_n(node);
+	int nivel = b_tree_node_get_nivel(node);
+
+	if (nivel == 1) {
+		if (n != B_TREE_ORDER-1) {
+			b_tree_node_sorted_insert_item(node, idNascimento, RRN);
+			pair p;
+			p.key = -2;
+			p.RRN = -1;
+			return p;
+		}
+		else {
+			b_tree_manager_split_one_to_two(node, );
+		}
+	}
+
+	else {
+		int nextRRN = b_tree_node_get_RRN_that_fits(node, idNascimento);
+		BTreeNode *nextNode = b_tree_manager_read_at(manager, nextRRN);
+		pair p = recursive_insert(nextNode, idNascimento, RRN);
+		if (p.key < 0) {
+			if (p.key == -2) {
+				p.key = -1;
+				b_tree_manager_write_at(manager, nextNode);
+			}
+			free(nextNode);
+			return p;
+		}
+		else {
+
+		}
+	}
+	
+}
+
+/*
+
+*/
 void b_tree_manager_insert(BTreeManager *manager, int idNascimento, int RRN) {
 	if (manager == NULL) {
 		return;
 	}
+
+	int RRN = b_tree_header_get_noRaiz(manager->header);
+	if (RRN == -1) {
+		BTreeNode *node = b_tree_node_create(1);
+		b_tree_node_sorted_insert_item(node, idNascimento, RRN);
+		b_tree_manager_seek_first(manager);
+		b_tree_manager_write_current(manager, node);
+
+		b_tree_header_set_noRaiz(manager->header, 0);
+		b_tree_header_set_proxRRN(manager->header, 1);
+		b_tree_header_set_nroNiveis(manager->header, 1);
+		b_tree_header_set_nroChaves(manager->header, 1);
+
+		return;
+	}
+
+
 }
 
+/*
+
+*/
 int b_tree_manager_search_for (BTreeManager *manager, int idNascimento) {
 	if (manager == NULL) {
 		return;
@@ -229,25 +290,15 @@ int b_tree_manager_search_for (BTreeManager *manager, int idNascimento) {
 		//C = 2, 4, 7, 8, 10
 		//Pr= 1, 2, 3, 4,  5, 6
 
+		nodeRRN = b_tree_node_get_RRN_that_fits(node, idNascimento);
 
-
-		bool enteredBeforeNodeEnd = false;
-		for (int i = 0; i < B_TREE_ORDER-1; i++) {
-			int C = b_tree_node_get_C(node, i);
-
-			if (C == -1 || idNascimento < C) {
-				nodeRRN = b_tree_node_get_P(node, i);
-				enteredBeforeNodeEnd = true;
-				break;
+		if (nodeRRN == -2) {
+			for (int i = 0; i < B_TREE_ORDER; i++) {
+				if (b_tree_node_get_C(node, i) == idNascimento)
+					return b_tree_node_get_Pr(node, i);
 			}
-
-			else if (idNascimento == C)
-				return b_tree_node_get_Pr(node, i);
 		}
-
-		//Se não tiver entrado ainda (já chegamos no fim do nó), força a entrada à direita
-		if (!enteredBeforeNodeEnd)
-			nodeRRN = b_tree_node_get_P(node, B_TREE_ORDER-1);
+		
 	}
 
 	return -1;
