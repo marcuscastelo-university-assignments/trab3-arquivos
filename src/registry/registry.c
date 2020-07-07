@@ -7,6 +7,29 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+//TODO: comentar e usar mais vezes?
+VirtualRegistry *virtual_registry_create_copy(VirtualRegistry *base) {
+    VirtualRegistry *reg_data = virtual_registry_create();
+    
+    if (reg_data == NULL) {
+        fprintf(stderr, "ERROR: Insuficient memory on virtual_registry_create_copy()\n");
+        return NULL;
+    }
+    
+    if (base->cidadeBebe != NULL) reg_data->cidadeBebe = strdup(base->cidadeBebe);
+    if (base->cidadeMae != NULL) reg_data->cidadeMae = strdup(base->cidadeMae);
+    if (base->dataNascimento != NULL) reg_data->dataNascimento = strdup(base->dataNascimento);
+    if (base->estadoBebe != NULL) reg_data->estadoBebe = strdup(base->estadoBebe);
+    if (base->estadoMae != NULL) reg_data->estadoMae = strdup(base->estadoMae);
+    reg_data->idadeMae = base->idadeMae;
+    reg_data->idNascimento = base->idNascimento;
+    reg_data->sexoBebe = base->sexoBebe;
+    reg_data->fieldMask = base->fieldMask;
+
+    return reg_data;
+}
+
 /**
  *   Funçao que aloca uma struct que representa o registro do tipo cheio (Ler tipos de registro na struct do .h).
  *   Parametros:
