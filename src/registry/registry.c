@@ -114,7 +114,7 @@ void virtual_registry_set_field(VirtualRegistry *reg_data, char *field_name, cha
         return;
     }
     
-    //Compara o parâmetro com o nome dos campos do registro, atribuindo se for encontrado
+    //Compara o parâmetro com o nome dos campos do registro, atribuindo se for encontrado (dá free em caso de redefinição de string)
     if (!strcmp(field_name, "cidadeBebe")) {
         free(reg_data->cidadeBebe);
         reg_data->cidadeBebe = strdup(field_value);
@@ -145,13 +145,13 @@ void virtual_registry_set_field(VirtualRegistry *reg_data, char *field_name, cha
         return;
     }
     
-    if (!strcmp(field_name, "idNascimento")){
+    if (!strcmp(field_name, "idNascimento")){ //Supõe-se que o idNascimento não terá valor inválido
         reg_data->idNascimento = atoi(field_value);
         return;
     }
 
     if (!strcmp(field_name, "idadeMae")){
-        reg_data->idadeMae = atoi(field_value);
+        reg_data->idadeMae = (!strcmp(field_value, "") ? -1 : atoi(field_value));
         return;
     }
     
@@ -288,7 +288,7 @@ char *virtual_registry_read_value_from_input(char *field_name) {
         return NULL;
     }
     
-    char *valor;
+    char *valor = NULL;
     if (!strcmp("idadeMae", field_name) || !strcmp("idNascimento", field_name))
         scanf(" %ms", &valor);
     else

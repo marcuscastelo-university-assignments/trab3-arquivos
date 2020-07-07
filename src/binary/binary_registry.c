@@ -42,8 +42,8 @@ void binary_update_registry(FILE *file, VirtualRegistryUpdater *updated_reg) {
     int cidadeMaeOldSize = strlen(old_reg->cidadeMae);
     int cidadeBebeOldSize = strlen(old_reg->cidadeBebe);
 
-    int cidadeMaeNewSize = strlen(updated_reg->cidadeMae);
-    int cidadeBebeNewSize = strlen(updated_reg->cidadeBebe);
+    int cidadeMaeNewSize = ((updated_reg->fieldMask & MASK_CIDADEMAE) ? strlen(updated_reg->cidadeMae) : cidadeMaeOldSize);
+    int cidadeBebeNewSize = ((updated_reg->fieldMask & MASK_CIDADEBEBE) ? strlen(updated_reg->cidadeBebe) : cidadeBebeOldSize);
 
     //Define-se a posição de cada campo relativa ao início do registro (para futuros fseeks)
     int offsets[10];
