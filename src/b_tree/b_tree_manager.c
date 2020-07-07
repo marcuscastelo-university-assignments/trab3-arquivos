@@ -13,8 +13,9 @@
 
 #define REG_SIZE 72
 
-struct _pair {
+struct _insert_answer {
 	int key;
+	int value;
 	int RRN;
 };
 
@@ -209,42 +210,62 @@ void b_tree_manager_write_at(BTreeManager *manager, int RRN, BTreeNode *node) {
 /*
 
 */
-pair recursive_insert(BTreeManager *manager, BTreeNode *node, int idNascimento, int RRN) {
+insert_answer recursive_insert(BTreeManager *manager, BTreeNode *node, int nodeRRN, int idNascimento, int RRN) {
 	int n = b_tree_node_get_n(node);
 	int nivel = b_tree_node_get_nivel(node);
+	insert_answer ans;
 
 	if (nivel == 1) {
-		if (n != B_TREE_ORDER-1) {
+		if (n < B_TREE_ORDER-1) {
 			b_tree_node_sorted_insert_item(node, idNascimento, RRN);
-			pair p;
-			p.key = -2;
-			p.RRN = -1;
-			return p;
+			b_tree_manager_write_at(manager, nodeRRN, node);
+
+			ans.key = -1;	
+			ans.value = -1;
+			ans.RRN = -1;
 		}
 		else {
-			// b_tree_manager_split_one_to_two(node, ); TODO: colocar no .h?
+			BTreeNode *new = b_tree_node_split_one_to_two(node, idNascimento, RRN, -1);
+
+			ans.key = b_tree_node_get_C(new, 0);
+			ans.value = b_tree_node_get_Pr(new, 0);
+			ans.RRN = b_tree_header_get_proxRRN(manager->header);
+
+			b_tree_manager_write_at(manager, nodeRRN, node);
+			b_tree_manager_write_at(manager, ans.RRN, new);
+
+			b_tree_header_set_proxRRN(manager->header, H_INCREASE);
+			b_tree_header_set_nroChaves(manager->header, H_INCREASE);
+
+			b_tree_node_remove_item(node, 0);
+			b_tree_node_free(new);
 		}
+
+		return ans;
 	}
 
 	else {
 		int nextRRN = b_tree_node_get_RRN_that_fits(node, idNascimento);
 		BTreeNode *nextNode = b_tree_manager_read_at(manager, nextRRN);
-		pair p = recursive_insert(manager, nextNode, idNascimento, RRN);
-		if (p.key < 0) {
-			if (p.key == -2) {
-				p.key = -1;
-				b_tree_manager_write_at(manager, nextRRN, nextNode); //TODO: marcus colocou nextRRN pode estar errado
-			}
-			free(nextNode);
-			return p;
-		}
-		else {
-			//TODO: lucas esqueceu de acabar
-		}
-	}
+		insert_answer ans = recursive_insert(manager, nextNode, nextRRN, idNascimento, RRN);
+		if (ans.key >= 0) {
+			if (n < B_TREE_ORDER-1) {
+				int pos = b_tree_node_sorted_insert_item(node, ans.key, ans.value);
+				b_tree_node_insert_P(node, ans.RRN, pos+1);
+				b_tree_manager_write_at(manager, nodeRRN, node);
 
-	//TODO: lucas esqueceu return
-	return (pair){}; //TODO: me tira daqui
+				ans.key = -1;	
+				ans.value = -1;
+				ans.RRN = -1;
+			}
+			else {
+				//todo split no pai
+			}
+		}
+
+		free(nextNode);
+		return ans;
+	}
 }
 
 /*
@@ -297,11 +318,15 @@ int b_tree_manager_search_for (BTreeManager *manager, int idNascimento) {
 
 		if (nodeRRN == -2) {
 			for (int i = 0; i < B_TREE_ORDER; i++) {
-				if (b_tree_node_get_C(node, i) == idNascimento)
-					return b_tree_node_get_Pr(node, i);
+				if (b_tree_node_get_C(node, i) == idNascimento) {
+					int ans = b_tree_node_get_Pr(node, i);
+					b_tree_node_free(node);
+					return ans;
+				}
 			}
 		}
-		
+
+		b_tree_node_free(node);
 	}
 
 	return -1;

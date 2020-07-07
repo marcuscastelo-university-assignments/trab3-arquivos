@@ -50,18 +50,20 @@ void b_tree_node_set_nivel (BTreeNode *node, int nivel) {
     return;
 }
 
-bool b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
-    
+int b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
     if (node == NULL)
-        return false;
+        return -1;
     
     if (node->n == B_TREE_ORDER-1)
-        return false;
+        return -1;
+
+    int pos;
 
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
         if (node->C[i] == -1) {
             node->C[i] = C;
             node->Pr[i] = Pr;
+            pos = i;
             break;
         }
 
@@ -73,13 +75,14 @@ bool b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
 
             node->C[i] = C;
             node->Pr[i] = Pr;
+            pos = i;
             break;
         }
     }
 
     node->n++;
 
-    return true;
+    return pos;
 }
 
 void b_tree_node_set_item (BTreeNode *node, int C, int Pr, int position) {

@@ -7,7 +7,7 @@
 #include "b_tree_header.h"
 #include "b_tree_node.h"
 
-typedef struct _pair pair;
+typedef struct _insert_answer insert_answer;
 typedef struct _b_tree_manager BTreeManager;
 
 BTreeManager *b_tree_manager_create(FILE *bin_file, BTHeader *header);

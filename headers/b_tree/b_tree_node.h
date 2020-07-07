@@ -10,7 +10,7 @@ typedef struct _b_tree_node BTreeNode;
 BTreeNode* b_tree_node_create (int nivel);
 void b_tree_node_free (BTreeNode *node);
 
-bool b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr);
+int b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr);
 void b_tree_node_set_item (BTreeNode *node, int C, int Pr, int position);
 void b_tree_node_insert_P (BTreeNode *node, int P, int position);
 void b_tree_node_set_P (BTreeNode *node, int P, int position);
