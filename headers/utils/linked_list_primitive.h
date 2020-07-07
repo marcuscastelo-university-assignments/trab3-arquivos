@@ -1,5 +1,6 @@
 #pragma once
 
+#define DEFAULT_T_VALUE 0
 typedef int T;
 
 typedef struct _linked_list_primitive_int LinkedListInt;

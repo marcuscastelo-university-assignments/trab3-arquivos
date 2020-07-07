@@ -6,17 +6,18 @@ FLAGS = -Wall -g
 SRC_RULES = binary header registry data_manager utils csv b_tree
 
 all: $(SRC_RULES)
-	$(COMP) *.o $(SRC)/main.c -o prog $(INC) $(FLAGS)
-	rm *.o
+	@ $(COMP) *.o $(SRC)/main.c -o prog $(INC) $(FLAGS) && \
+	echo 'Compiled Successfully' || \
+	echo 'There were compilation errors'
 
 run:
 	./prog
 
 $(SRC_RULES):
-	$(COMP) -c $(SRC)/$@/*.c $(INC) $(FLAGS)
+	@ $(COMP) -c $(SRC)/$@/*.c $(INC) $(FLAGS)
 
 zip:
-	zip -r trab2.zip src headers Makefile
+	@ zip -r trab2.zip src headers Makefile
 
 deb: all
 	./prog < 1.in > 1.out

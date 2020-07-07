@@ -222,27 +222,29 @@ pair recursive_insert(BTreeManager *manager, BTreeNode *node, int idNascimento, 
 			return p;
 		}
 		else {
-			b_tree_manager_split_one_to_two(node, );
+			// b_tree_manager_split_one_to_two(node, ); TODO: colocar no .h?
 		}
 	}
 
 	else {
 		int nextRRN = b_tree_node_get_RRN_that_fits(node, idNascimento);
 		BTreeNode *nextNode = b_tree_manager_read_at(manager, nextRRN);
-		pair p = recursive_insert(nextNode, idNascimento, RRN);
+		pair p = recursive_insert(manager, nextNode, idNascimento, RRN);
 		if (p.key < 0) {
 			if (p.key == -2) {
 				p.key = -1;
-				b_tree_manager_write_at(manager, nextNode);
+				b_tree_manager_write_at(manager, nextRRN, nextNode); //TODO: marcus colocou nextRRN pode estar errado
 			}
 			free(nextNode);
 			return p;
 		}
 		else {
-
+			//TODO: lucas esqueceu de acabar
 		}
 	}
-	
+
+	//TODO: lucas esqueceu return
+	return (pair){}; //TODO: me tira daqui
 }
 
 /*
@@ -253,7 +255,8 @@ void b_tree_manager_insert(BTreeManager *manager, int idNascimento, int RRN) {
 		return;
 	}
 
-	int RRN = b_tree_header_get_noRaiz(manager->header);
+	//TODO: dar uso lucas
+	// int rootRRN = b_tree_header_get_noRaiz(manager->header);
 	if (RRN == -1) {
 		BTreeNode *node = b_tree_node_create(1);
 		b_tree_node_sorted_insert_item(node, idNascimento, RRN);
@@ -276,7 +279,7 @@ void b_tree_manager_insert(BTreeManager *manager, int idNascimento, int RRN) {
 */
 int b_tree_manager_search_for (BTreeManager *manager, int idNascimento) {
 	if (manager == NULL) {
-		return;
+		return -666; //TODO: lucas colocar valor desejado
 	}
 
 	BTreeNode *node;

@@ -1,4 +1,6 @@
 #include "b_tree_node.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 
 struct _b_tree_node {
@@ -204,6 +206,8 @@ int b_tree_node_get_RRN_that_fits (BTreeNode *node, int key) {
     if (node == NULL)
         return -1;
 
+    int nodeRRN = 0;
+
     bool enteredBeforeNodeEnd = false;
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
         int C = b_tree_node_get_C(node, i);
@@ -258,8 +262,8 @@ BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P)
     int *newP = (int*) malloc (sizeof(int) * B_TREE_ORDER+1);
 
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
-        newC[i] = b_tree_node_get_C(parent);
-        newPr[i] = b_tree_node_get_Pr(parent);
+        newC[i] = b_tree_node_get_C(parent, i);
+        newPr[i] = b_tree_node_get_Pr(parent, i);
     }
 
     int position = insertion_sort_insert_in_array(newC, B_TREE_ORDER, C);

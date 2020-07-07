@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "bool.h"
 //Nó da lista ligada, contém os dados do registro e o próximo nó (NULL caso fim da lista)
 struct _llprim_node_int
 {
@@ -34,7 +35,7 @@ LinkedListInt *_linked_list_create() {
  *  Retorno:
  *      LinkedListIntNode -> nó ainda não conectado na lista, com os dados informados
  */
-LinkedListIntNode *_create_node(T data) {
+static LinkedListIntNode *_create_node(T data) {
     LinkedListIntNode *node = malloc(sizeof(LinkedListIntNode));
     node -> data = data;
     node -> next = NULL;
@@ -104,12 +105,12 @@ int _linked_list_get_size(LinkedListInt *list) {
  *      bool (typedef char) should_delete_data -> flag se a função deve ou não dar free nos Virtual* dentro da lista
  *  Retorno: void
  */
-void _recursive_delete_nodes(LinkedListIntNode *node, bool should_delete_data) {
+static void _recursive_delete_nodes(LinkedListIntNode *node, bool should_delete_data) {
     if (node == NULL) return;
     _recursive_delete_nodes(node->next, should_delete_data);
-    
-    if (should_delete_data) virtual__delete(&node->data);
-    node->data = NULL;
+
+    // if (should_delete_data) virtual__delete(&node->data); TODO: criar a funçao
+    node->data = DEFAULT_T_VALUE;
     node->next = NULL;
     free(node);
 }
@@ -147,7 +148,7 @@ void _linked_list_delete(LinkedListInt **list_ptr, bool should_delete_data) {
 
 LinkedListInt *_linked_list_create();
 void _linked_list_insert(LinkedListInt *list, T value);
-void _linked_list_delete(LinkedListInt **list_ptr);
+void _linked_list_delete(LinkedListInt **list_ptr, bool should_delete_data);
 
 TArr _linked_list_to_array(LinkedListInt *list);
 

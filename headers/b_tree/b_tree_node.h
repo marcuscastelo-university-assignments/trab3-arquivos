@@ -12,7 +12,7 @@ void b_tree_node_free (BTreeNode *node);
 
 bool b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr);
 void b_tree_node_set_item (BTreeNode *node, int C, int Pr, int position);
-void b_tree_node_insert_P (BTreeNode *node, int P);
+void b_tree_node_insert_P (BTreeNode *node, int P, int position);
 void b_tree_node_set_P (BTreeNode *node, int P, int position);
 void b_tree_node_set_nivel (BTreeNode *node, int nivel);
 

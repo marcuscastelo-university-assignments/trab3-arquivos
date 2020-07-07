@@ -35,7 +35,7 @@ RegistryLinkedList *registry_linked_list_create() {
  *  Retorno:
  *      RegistryLinkedListNode -> nó ainda não conectado na lista, com os dados informados
  */
-RegistryLinkedListNode *_create_node(VirtualRegistry *data) {
+static RegistryLinkedListNode *_create_node(VirtualRegistry *data) {
     RegistryLinkedListNode *node = malloc(sizeof(RegistryLinkedListNode));
     node -> data = data;
     node -> next = NULL;
@@ -105,7 +105,7 @@ int registry_linked_list_get_size(RegistryLinkedList *list) {
  *      bool (typedef char) should_delete_data -> flag se a função deve ou não dar free nos VirtualRegistry* dentro da lista
  *  Retorno: void
  */
-void _recursive_delete_nodes(RegistryLinkedListNode *node, bool should_delete_data) {
+static void _recursive_delete_nodes(RegistryLinkedListNode *node, bool should_delete_data) {
     if (node == NULL) return;
     _recursive_delete_nodes(node->next, should_delete_data);
     

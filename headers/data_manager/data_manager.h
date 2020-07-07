@@ -7,6 +7,9 @@
 #include "registry.h"
 #include "registry_array.h"
 
+
+
+
 /**
  *  Enum que determina os modos de abertura de arquivo e gerenciamento de status
  *  READ -> abre em rb e não mexe em nenhum byte do arquivo
@@ -31,12 +34,15 @@ typedef enum {
 
 typedef struct _data_manager DataManager;
 
+//TODO: comentar
+typedef void (*DMForeachCallback)(DataManager *manager, VirtualRegistry *match_registry);
+
 DataManager *data_manager_create(char *file_name);
 
 OPEN_RESULT data_manager_open(DataManager *manager, OPEN_MODE mode);
 
-void data_manager_write_headers(DataManager *manager);
-void data_manager_read_headers(DataManager *manager);
+void data_manager_write_headers_to_disk(DataManager *manager);
+void data_manager_read_headers_from_disk(DataManager *manager);
 
 void data_manager_close(DataManager *manager);
 
@@ -47,6 +53,8 @@ bool data_manager_is_file_consistent(DataManager *manager);
 void data_manager_insert_arr_at_end(DataManager *manager, VirtualRegistry **reg_data_arr, int arr_size);
 int data_manager_insert_at_end(DataManager *manager, VirtualRegistry *reg_data);
 
+void data_manager_for_each_match(DataManager *manager, VirtualRegistryArray *match_conditions, DMForeachCallback callback_func);
+
 VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *match_terms);
 VirtualRegistry *data_manager_fetch_at(DataManager *manager, int RRN);
 VirtualRegistryArray *data_manager_fetch_all(DataManager *manager);
@@ -56,5 +64,8 @@ void data_manager_remove_at(DataManager *manager, int RRN);
 
 void data_manager_update(DataManager *manager, VirtualRegistry *match_terms, VirtualRegistry *new_data);
 void data_manager_update_at(DataManager *manager, int RRN, VirtualRegistry *new_data);
+
+void data_manager_for_each(DataManager *manager, DMForeachCallback callback_func);
+bool data_manager_is_empty(DataManager *manager);
 
 #endif  //!__DATA_MANAGER__H__

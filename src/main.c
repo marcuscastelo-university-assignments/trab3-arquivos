@@ -105,6 +105,10 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
     binarioNaTela(bin_filename);
 }
 
+void _DMForeachCallback_print_register(DataManager *manager, VirtualRegistry *registry) {
+
+}
+
 /* 
  *  Funcionalidade 2: Abrir arquivo binário já existente
  *  Parâmetros:
@@ -133,30 +137,9 @@ void funcionalidade2(char *bin_filename) {
         return;
     }
 
-    //Le todos os registros e os retorna no formato VirtualRegistryArray
-    VirtualRegistryArray *reg_arr = data_manager_fetch_all(data_manager);
-    
-    if (reg_arr == NULL) {
-        fprintf(stderr, "ERROR: couldn't fetch all registries\n");
-        return;
-    }
-
     //Se não houverem registros, exibir mensagem conforme especificação do trabalho (obs: ignorando especificação do trabalho 1, que usa 'i' minúsculo. Supondo ser um erro de digitação)
-    if (reg_arr->size == 0) printf("Registro Inexistente.\n");
-    else for (int i = 0; i < reg_arr->size; i++) {
-        VirtualRegistry *reg_data = reg_arr->data_arr[i];
-        //Se houver algum problema, exibir mensagem de erro
-        if (reg_data == NULL) {
-            fprintf(stderr, "Erro: Falha na exibição do registro válido numero %d @funcionalidade2()\n", i);
-            continue;
-        }
-
-        //Printa o registro no formato de string, de acordo com as especificacoes do trabalho
-        virtual_registry_print(reg_data);
-    }
-
-    //Libera a memória usada pelo vetor de registros
-    virtual_registry_array_delete(&reg_arr);
+    if (data_manager_is_empty(data_manager)) printf("Registro Inexistente.\n");
+    else data_manager_for_each(data_manager, _DMForeachCallback_print_register);
 
     //Deleta o DataManager, fechando o arquivo e liberando a memoria
     data_manager_delete(&data_manager);
@@ -313,7 +296,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
 
     RegistryLinkedList *list = registry_linked_list_create();
     VirtualRegistryArray *reg_arr;
-    VirtualRegistryFilter *reg_filter;
+    VirtualRegistryFilter *reg_filter;  
     
     if (list == NULL) {
         print_erro("ERROR: couldn't allocate memory for RegistryLinkedList @funcionalidade5()\n");
@@ -347,7 +330,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
         return;
     }
 
-    //Libera a memória da lista lidada sem apager os seus itens pelo mesmo motivo acima
+    //Libera a memória da lista lidada sem apagar os seus itens pelo mesmo motivo acima
     registry_linked_list_delete(&list, false);
 
     //Remove os registros que contiverem as informações especificadas (remove os que derem match)
@@ -506,7 +489,7 @@ void funcionalidade10 (Funcionalidade6ExtensionInfo *info) {
     FILE *stream = info->b_tree_file_stream;
     BTHeader *header = b_tree_header_create();
     b_tree_header_read_from_bin(header, stream);
-    BTreeManager *manager = b_tree_manager_create(stream, header);
+    // BTreeManager *manager = b_tree_manager_create(stream, header);
 
     //TODO: Inserir
     // b_tree_manager_write_at(manager, info->RRN, );

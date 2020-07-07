@@ -54,22 +54,22 @@ DataManager *data_manager_create(char *file_name) {
  *      DataManager *manager -> gerenciador que possui os headers e o arquivo binário aberto em modo que permita a escrita
  *  Retorno: void
  */
-void data_manager_write_headers(DataManager *manager) {
+void data_manager_write_headers_to_disk(DataManager *manager) {
     //Validação de parâmetros
     if (manager == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_write_headers()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_write_headers_to_disk()\n");
         return;
     }
 
     //Valida o modo, impedindo tentativas de escrita no modo somente leitura
     if (manager->requested_mode == READ) {
-        fprintf(stderr, "ERROR: trying to write headers on a read-only DataManager @data_manager_write_headers()\n");
+        fprintf(stderr, "ERROR: trying to write headers on a read-only DataManager @data_manager_write_headers_to_disk()\n");
         return;
     }
 
     //Verifica se o manager não está em um estado inválido, isto é, quando o arquivo não está aberto ou os headers não estão definidos
     if (manager->header == NULL || manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: trying to write headers on a invalid DataManager state @data_manager_write_headers()\n");
+        fprintf(stderr, "ERROR: trying to write headers on a invalid DataManager state @data_manager_write_headers_to_disk()\n");
         return;
     }
 
@@ -84,15 +84,15 @@ void data_manager_write_headers(DataManager *manager) {
  *      DataManager *manager -> gerenciador que possui os headers e o arquivo binário aberto
  *  Retorno: void
  */
-void data_manager_read_headers(DataManager *manager) {
+void data_manager_read_headers_from_disk(DataManager *manager) {
     //Validação de parâmetros
     if (manager == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_read_headers()\n");
+        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_read_headers_from_disk()\n");
         return;
     }
 
     if (manager->header == NULL || manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: trying to read headers on a invalid DataManager state @data_manager_read_headers()\n");
+        fprintf(stderr, "ERROR: trying to read headers on a invalid DataManager state @data_manager_read_headers_from_disk()\n");
         return;
     }
 
@@ -165,7 +165,7 @@ void data_manager_close(DataManager *manager) {
     //Marca o arquivo como consistente. (OBS: não é necessário no caso da leitura, pois nenhuma modificação foi feita)
     if (manager->requested_mode != READ) {
         reg_header_set_status(manager->header, '1');
-        data_manager_write_headers(manager);
+        data_manager_write_headers_to_disk(manager);
     }
     reg_header_delete(&manager->header);
 
@@ -265,20 +265,6 @@ int data_manager_insert_at_end(DataManager *manager, VirtualRegistry *reg_data) 
  *      VirtualRegistryArray* -> vetor com todos os registros encontrados de acordo com os termos de busca
  */
 VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *search_terms) {
-    //Validação de parâmetros
-    if (manager == NULL || search_terms == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid parameters @data_manager_fetch()\n");
-        return NULL;
-    }
-
-    //Validação de estado do arquivo binário
-    if (manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: DataManager haven't opened the binary file @data_manager_fetch()\n");
-        return NULL;
-    }
-
-    int registriesCounter = reg_header_get_registries_count(manager->header);
-
     //Tenta criar uma lista ligada na qual serão inseridos os registros que condizerem com os termos de busca
     RegistryLinkedList *list = registry_linked_list_create();
     if (list == NULL) {
@@ -286,27 +272,21 @@ VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *
         return NULL;
     }
 
-    //Se não houverem registros, não há porque der fseek
-    if (registriesCounter > 0)
-        registry_manager_seek_first(manager->registry_manager);
 
-    //Para todos os registros, adicione-os a lista caso se encaixem aos termos de busca
-    for (int i = 0; i < registriesCounter; ) {
-        //Obtém o registro na posição do cursor e avança para o próximo
-        VirtualRegistry *reg_data = registry_manager_read_current(manager->registry_manager);
+    DMForeachCallback innerCallback = ({
+        void _callback(DataManager *manager, VirtualRegistry *registry) {
+            //Verifica se, dentro da máscara informada, o registro atual atende aos termos de busca e o adiciona na lista em caso positivo
+            if (virtual_registry_compare(registry, search_terms) == true)
+                registry_linked_list_insert(list, registry);
+            else //Se não, libera a memória neste momento, já que não haverá mais referências ao registro 
+                virtual_registry_delete(&registry);
+        } _callback;
+    });
+
+    data_manager_for_each(manager, innerCallback);
+
         
-        if (reg_data == NULL) continue;
 
-        //Verifica se, dentro da máscara informada, o registro atual atende aos termos de busca e o adiciona na lista em caso positivo
-        if (virtual_registry_compare(reg_data, search_terms) == true)
-            registry_linked_list_insert(list, reg_data);
-        else //Se não, libera a memória neste momento, já que não haverá mais referências ao registro 
-            virtual_registry_delete(&reg_data);
-
-        //i++ para registros não deletados
-        i++;
-    }
-    
     //Converte a lista ligada para uma struct que guarda um vetor e seu tamanho
     VirtualRegistryArray *reg_data_array = registry_linked_list_to_array(list);
 
@@ -344,93 +324,36 @@ VirtualRegistry *data_manager_fetch_at(DataManager *manager, int RRN) {
     return registry_manager_read_at(manager->registry_manager, RRN);
 }
 
-
-/**
- *  Obtém todos os registros do arquivo em forma de vetor.
- *  Parâmetros:
- *      DataManager *manager -> gerenciador com o arquivo aberto.
- *  Retorno: 
- *      VirtualRegistryArray* -> vetor com os registros
- */
-VirtualRegistryArray *data_manager_fetch_all(DataManager *manager) {
-    //Validação de parâmetros
-    if (manager == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_fetch_at()\n");
-        return NULL;
-    }
-
-    //Validação do estado do arquivo binário
-    if (manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: DataManager haven't opened the binary file @data_manager_fetch_at()\n");
-        return NULL;
-    } 
-
+void data_manager_for_each_match(DataManager *manager, VirtualRegistryArray *match_conditions, DMForeachCallback callback_func) {
     #define reg_man manager->registry_manager
 
-    int arr_size = reg_header_get_registries_count(manager->header);
-
-    //Se não houver registros, retorna um vetor vazio
-    if (arr_size == 0) return virtual_registry_array_create(NULL, 0);
-
-    VirtualRegistry **reg_arr = (VirtualRegistry**) malloc(sizeof(VirtualRegistry*) * arr_size);
-    VirtualRegistry *reg_data;
-
-    //Posiciona o cursor no primeiro registro
-    registry_manager_seek_first(reg_man);
-
-    //Alimenta o vetor com os registros lidos do arquivo
-    for (int i = 0; i < arr_size; i++) {
-        reg_data = registry_manager_read_current(reg_man);
-
-        //Ignora registros deletados
-        if (reg_data != NULL) reg_arr[i] = reg_data;   
+    if (callback_func == NULL) {
+        fprintf(stderr, "ERROR: calling data_manager_for_each_match without callback function\n");
+        return;
     }
 
-    return virtual_registry_array_create(reg_arr, arr_size);;
-
-    #undef reg_man
-}
-
-/**
- *  Remove registros que se encaixem em um dos termos especificados.
- *  Parâmetros:
- *      DataManager *manager -> gerenciador que  possui o arquivo aberto
- *      VirtualRegistryArray *search_terms_array -> vetor de termos de busca
- *  Retorno: void
- */
-void data_manager_remove_matches (DataManager *manager, VirtualRegistryArray *search_terms_arr) {
-    #define reg_man manager->registry_manager
-
     //Validação de parâmetros
-    if (manager == NULL || search_terms_arr == NULL) {
+    if (manager == NULL || match_conditions == NULL) {
         fprintf(stderr, "ERROR: (parameter) invalid parameter @data_manager_remove_matches()\n");
         return;
     }
 
-    int cur_reg_count = reg_header_get_registries_count(manager->header);
-    int cur_del_count = reg_header_get_removed_count(manager->header);
-    int new_del_count = 0;
-
     //Garante que existem registros para sererm removidos
-    if (cur_reg_count <= 0) return;
+    if (data_manager_is_empty(manager)) return;
 
     //Move o cursor para o primeiro registro
     registry_manager_seek_first(reg_man);
 
-    for (int i = 0; i < cur_reg_count;) {
+    int reg_count = reg_header_get_registries_count(manager->header);
+    for (int i = 0; i < reg_count;) {
         VirtualRegistry *reg_data = registry_manager_read_current(reg_man);
 
         //Se o registro era um deletado, não conte i++
         if (reg_data == NULL) continue;
 
-        //Verifica se o registro atual se encaixa em um dos termos de busca. Se sim, apague-o
-        if (virtual_registry_array_contains(search_terms_arr, reg_data, virtual_registry_compare) == true) {
-            //Volta o cursor para o registro, já que ele foi deslocado devido à leitura
-            registry_manager_jump_registry(reg_man, BACK);
-
-            //Apaga do disco
-            registry_manager_delete_current(reg_man);
-            new_del_count++;
+        //Verifica se o registro atual se encaixa em um dos termos de busca. Se sim, chame o callback
+        if (match_conditions == NULL || virtual_registry_array_contains(match_conditions, reg_data, virtual_registry_compare) == true) {
+            callback_func(manager, reg_data);
         }
 
         //Libera a memória do registro na RAM
@@ -440,11 +363,25 @@ void data_manager_remove_matches (DataManager *manager, VirtualRegistryArray *se
         i++;
     }
 
-    //Atualiza os headers (apenas na RAM, por enquanto)
-    reg_header_set_removed_count(manager->header, cur_del_count + new_del_count);
-    reg_header_set_registries_count(manager->header, cur_reg_count - new_del_count);
-
     #undef reg_man
+}
+
+void _DMForeachCallback_remove(DataManager *manager, VirtualRegistry *reg) {
+    registry_manager_jump_registry(manager->registry_manager, BACK);
+    registry_manager_delete_current(manager->registry_manager);
+    reg_header_set_removed_count(manager->header, INCREASE);
+    reg_header_set_registries_count(manager->header, DECREASE);
+}
+
+/**
+ *  Remove registros que se encaixem em um dos termos especificados.
+ *  Parâmetros:
+ *      DataManager *manager -> gerenciador que  possui o arquivo aberto
+ *      VirtualRegistryArray *search_terms_array -> vetor de termos de busca
+ *  Retorno: void
+ */
+void data_manager_remove_matches (DataManager *manager, VirtualRegistryArray *match_terms_arr) {
+    data_manager_for_each_match(manager, match_terms_arr, _DMForeachCallback_remove);
 } 
 
 /**
@@ -483,3 +420,11 @@ void data_manager_update_at(DataManager *manager, int RRN, VirtualRegistryUpdate
         reg_header_set_updated_count(manager->header, H_INCREASE);
     }
 }   
+
+void data_manager_for_each(DataManager *manager, DMForeachCallback callback_func) {
+    data_manager_for_each_match(manager, NULL, callback_func);
+}
+
+bool data_manager_is_empty(DataManager *manager) {
+    return reg_header_get_registries_count(manager->header) == 0;
+}
