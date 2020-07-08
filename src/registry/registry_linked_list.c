@@ -2,6 +2,7 @@
 #include "registry_array.h"
 
 #include <stdlib.h>
+#include "debug.h"
 
 //Nó da lista ligada, contém os dados do registro e o próximo nó (NULL caso fim da lista)
 typedef struct reg_ll_node
@@ -72,14 +73,14 @@ void registry_linked_list_insert(RegistryLinkedList *linked_list, VirtualRegistr
 VirtualRegistryArray *registry_linked_list_to_array(RegistryLinkedList *list) {
     //Validação de parâmetros
     if (list == NULL) {
-        fprintf(stderr, "ERROR: invalid null list parameter @registry_linked_list_to_array()\n");
+        DP("ERROR: invalid null list parameter @registry_linked_list_to_array()\n");
         return NULL;
     }
 
     //Tenta criar o array que armazenará a lista
     VirtualRegistry **reg_data_arr = malloc(sizeof(VirtualRegistry*) * list->size);
     if (reg_data_arr == NULL) {
-        fprintf(stderr, "ERROR: Failed to allocate %d VirtualRegistries @registry_linked_list_to_array()\n", list->size);
+        DP("ERROR: Failed to allocate %d VirtualRegistries @registry_linked_list_to_array()\n", list->size);
         return NULL;
     }  
     

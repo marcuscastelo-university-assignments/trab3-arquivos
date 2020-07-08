@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debug.h"
+
 /**
  *  Função de baixo nível extremamente otimizada para o acesso mínimo a disco.
  *  Inicialmente, é feita a leitura do registro presente no disco. Em seguida,
@@ -242,7 +244,7 @@ VirtualRegistry *binary_read_registry(FILE *file) {
     //Tenta alocar um registro na RAM
     VirtualRegistry *reg_data = virtual_registry_create();
     if (reg_data == NULL) {
-        fprintf(stderr, "ERROR: unable to create VirtualRegistry @binary_read_registry()");
+        DP("ERROR: unable to create VirtualRegistry @binary_read_registry()");
         return NULL;
     }
 

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "binary_io.h"
+#include "debug.h"
 
 #define HEADER_GARBAGE_SIZE 55
 
@@ -34,7 +35,7 @@ BTHeader *b_tree_header_create(void) {
     //Tenta alocar memória
     BTHeader *header = malloc(sizeof(BTHeader));
     if (header == NULL) {
-        fprintf(stderr, "ERROR: not enough memory @header_create()\n");
+        DP("ERROR: not enough memory @header_create()\n");
         return NULL;
     }
 
@@ -61,7 +62,7 @@ BTHeader *b_tree_header_create(void) {
 void b_tree_header_delete(BTHeader **header_ptr) {
     //Validação de parâmetros
     if (header_ptr == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null pointer @b_tree_header_delete()\n");
+        DP("ERROR: (parameter) invalid null pointer @b_tree_header_delete()\n");
         return;
     }
 
@@ -83,12 +84,12 @@ void b_tree_header_delete(BTHeader **header_ptr) {
 void b_tree_header_write_to_bin(BTHeader *header, FILE *file) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @b_tree_header_write_to_bin()\n");
+        DP("ERROR: (parameter) invalid null header @b_tree_header_write_to_bin()\n");
         return;
     }
 
     if (file == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null file stream @b_tree_header_write_to_bin()\n");
+        DP("ERROR: (parameter) invalid null file stream @b_tree_header_write_to_bin()\n");
         return;
     }
 
@@ -175,12 +176,12 @@ void b_tree_header_write_to_bin(BTHeader *header, FILE *file) {
 void b_tree_header_read_from_bin(BTHeader *header, FILE *bin_file) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @b_tree_header_read_from_bin()\n");
+        DP("ERROR: (parameter) invalid null header @b_tree_header_read_from_bin()\n");
         return;
     }
 
     if (bin_file == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null file stream @b_tree_header_read_from_bin()\n");
+        DP("ERROR: (parameter) invalid null file stream @b_tree_header_read_from_bin()\n");
         return;
     }
 
@@ -259,12 +260,12 @@ int b_tree_header_get_nroChaves (BTHeader *header) { return header->nroChaves; }
 void b_tree_header_set_status(BTHeader *header, char new_status) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @b_tree_header_set_status()\n");
+        DP("ERROR: (parameter) invalid null header @b_tree_header_set_status()\n");
         return;
     }
 
     if (new_status != '0' && new_status != '1') {
-        fprintf(stderr, "ERROR: (parameter) invalid status provided, should be '0' or '1' @b_tree_header_set_status()\n");
+        DP("ERROR: (parameter) invalid status provided, should be '0' or '1' @b_tree_header_set_status()\n");
         return;
     }
 

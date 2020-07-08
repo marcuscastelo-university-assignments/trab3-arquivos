@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "binary_io.h"
+#include "debug.h"
 
 #define HEADER_GARBAGE_SIZE 111
 
@@ -32,7 +33,7 @@ RegistryHeader *reg_header_create(void) {
     //Tenta alocar memória
     RegistryHeader *header = malloc(sizeof(RegistryHeader));
     if (header == NULL) {
-        fprintf(stderr, "ERROR: not enough memory @header_create()\n");
+        DP("ERROR: not enough memory @header_create()\n");
         return NULL;
     }
 
@@ -59,7 +60,7 @@ RegistryHeader *reg_header_create(void) {
 void reg_header_delete(RegistryHeader **header_ptr) {
     //Validação de parâmetros
     if (header_ptr == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null pointer @reg_header_delete()\n");
+        DP("ERROR: (parameter) invalid null pointer @reg_header_delete()\n");
         return;
     }
     
@@ -81,12 +82,12 @@ void reg_header_delete(RegistryHeader **header_ptr) {
 void reg_header_write_to_bin(RegistryHeader *header, FILE *file) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @reg_header_write_to_bin()\n");
+        DP("ERROR: (parameter) invalid null header @reg_header_write_to_bin()\n");
         return;
     }
 
     if (file == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null file stream @reg_header_write_to_bin()\n");
+        DP("ERROR: (parameter) invalid null file stream @reg_header_write_to_bin()\n");
         return;
     }
 
@@ -173,12 +174,12 @@ void reg_header_write_to_bin(RegistryHeader *header, FILE *file) {
 void reg_header_read_from_bin(RegistryHeader *header, FILE *bin_file) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @reg_header_read_from_bin()\n");
+        DP("ERROR: (parameter) invalid null header @reg_header_read_from_bin()\n");
         return;
     }
 
     if (bin_file == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null file stream @reg_header_read_from_bin()\n");
+        DP("ERROR: (parameter) invalid null file stream @reg_header_read_from_bin()\n");
         return;
     }
 
@@ -253,12 +254,12 @@ int reg_header_get_updated_count (RegistryHeader *header) { return header->updat
 void reg_header_set_status(RegistryHeader *header, char new_status) {
     //Validação de parâmetros
     if (header == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null header @reg_header_set_status()\n");
+        DP("ERROR: (parameter) invalid null header @reg_header_set_status()\n");
         return;
     }
 
     if (new_status != '0' && new_status != '1') {
-        fprintf(stderr, "ERROR: (parameter) invalid status provided, should be '0' or '1' @reg_header_set_status()\n");
+        DP("ERROR: (parameter) invalid status provided, should be '0' or '1' @reg_header_set_status()\n");
         return;
     }
 

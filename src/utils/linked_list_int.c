@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 #include "bool.h"
+#include "debug.h"
+
 //Nó da lista ligada, contém os dados do registro e o próximo nó (NULL caso fim da lista)
 struct _llprim_node_int
 {
@@ -72,14 +74,14 @@ void _linked_list_insert(LinkedListInt *linked_list, T data) {
 TArr _linked_list_to_array(LinkedListInt *list) {
     //Validação de parâmetros
     if (list == NULL) {
-        fprintf(stderr, "ERROR: invalid null list parameter @_linked_list_to_array()\n");
+        DP("ERROR: invalid null list parameter @_linked_list_to_array()\n");
         return (TArr){NULL,0};
     }
 
     //Tenta criar o array que armazenará a lista
     T *array = malloc(sizeof(T) * list->size);
     if (array == NULL) {
-        fprintf(stderr, "ERROR: Failed to allocate %d VirtualRegistries @_linked_list_to_array()\n", list->size);
+        DP("ERROR: Failed to allocate %d VirtualRegistries @_linked_list_to_array()\n", list->size);
         return (TArr){NULL,0};
     }  
     
