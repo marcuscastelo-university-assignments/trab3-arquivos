@@ -478,7 +478,7 @@ void printint (int a) {printf("%d\n", a);}
 void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
     //Validação de parâmetros
     if (bin_filename == NULL || b_tree_filename == NULL) {
-        print_erro("ERROR: invalid filename @funcionalidade8()\n");
+        DP("ERROR: invalid filename @funcionalidade8()\n");
         return;
     }
 
@@ -486,7 +486,7 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
     DataManager *data_manager = data_manager_create(bin_filename);
 
     if (data_manager == NULL) {
-        print_erro("ERROR: couldn't create DataManager @funcionalidade8()\n");
+        DP("ERROR: couldn't create DataManager @funcionalidade8()\n");
         return;
     }
 
@@ -500,7 +500,7 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
 
     BTHeader *b_tree_header = b_tree_header_create();
     if (b_tree_header == NULL) {
-        print_erro("ERROR: Couldn't allocate memory for 'b_tree_header' @funcionalidade8()\n");
+        DP("ERROR: Couldn't allocate memory for 'b_tree_header' @funcionalidade8()\n");
         data_manager_delete(&data_manager);
         return;
     }
@@ -508,7 +508,7 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
     FILE *b_tree_file = fopen(b_tree_filename, "w+");
     BTreeManager *b_tree_manager = b_tree_manager_create(b_tree_file, b_tree_header);
     if (b_tree_manager == NULL) {
-        print_erro("ERROR: Couldn't allocate memory for 'b_tree_manager' @funcionalidade8()\n");
+        DP("ERROR: Couldn't allocate memory for 'b_tree_manager' @funcionalidade8()\n");
         data_manager_delete(&data_manager);
         b_tree_header_delete(&b_tree_header);
         return;
