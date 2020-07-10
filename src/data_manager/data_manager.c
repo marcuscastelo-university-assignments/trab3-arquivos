@@ -315,7 +315,7 @@ VirtualRegistry *data_manager_fetch_at(DataManager *manager, int RRN) {
     } 
 
     //Indica que o registro é inexistente se o RRN for inexistente
-    if (reg_header_get_next_RRN(manager->header) <= RRN) return NULL;
+    if (reg_header_get_next_RRN(manager->header) <= RRN || RRN <= 0) return NULL;
 
     return registry_manager_read_at(manager->registry_manager, RRN);
 }
@@ -419,4 +419,12 @@ void data_manager_for_each(DataManager *manager, DMForeachCallback callback_func
 
 bool data_manager_is_empty(DataManager *manager) {
     return reg_header_get_registries_count(manager->header) == 0;
+}
+
+RegistryHeader *data_manager_get_registry_header (DataManager *manager) {
+    if (manager == NULL) {
+        return NULL;
+    }
+
+    return manager->header;
 }

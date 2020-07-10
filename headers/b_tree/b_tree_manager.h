@@ -22,7 +22,7 @@ BTreeNode *b_tree_manager_read_at(BTreeManager *manager, int RRN);
 void b_tree_manager_write_current(BTreeManager *manager, BTreeNode *node);
 void b_tree_manager_write_at(BTreeManager *manager, int RRN, BTreeNode *node);
 
-
-
+void b_tree_manager_insert(BTreeManager *manager, int idNascimento, int RRN);
+int b_tree_manager_search_for (BTreeManager *manager, int idNascimento);
 
 #endif  //!__B_TREE_MANAGER__H__

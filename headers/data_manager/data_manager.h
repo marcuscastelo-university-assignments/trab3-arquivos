@@ -6,6 +6,7 @@
 #include "bool.h"
 #include "registry.h"
 #include "registry_array.h"
+#include "registry_header.h"
 
 
 
@@ -67,5 +68,7 @@ void data_manager_update_at(DataManager *manager, int RRN, VirtualRegistry *new_
 
 void data_manager_for_each(DataManager *manager, DMForeachCallback callback_func);
 bool data_manager_is_empty(DataManager *manager);
+
+RegistryHeader *data_manager_get_registry_header (DataManager *manager);
 
 #endif  //!__DATA_MANAGER__H__

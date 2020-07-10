@@ -19,6 +19,7 @@
 
 #include "registry.h"
 #include "registry_linked_list.h"
+#include "registry_header.h"
 
 #include "string_utils.h"
 #include "bool.h"
@@ -357,7 +358,6 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
         char *n_str -> string contendo a quantidade (int) de registros a serem inseridos
     Retorno: void
 */
-
 void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionInfo *extInfo) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
@@ -474,18 +474,71 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
     binarioNaTela(bin_filename);
 }
 
+void printint (int a) {printf("%d\n", a);}
 //TODO: comment
 void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
     //Validação de parâmetros
-    if (bin_filename == NULL) {
+    if (bin_filename == NULL || b_tree_filename == NULL) {
         print_erro("ERROR: invalid filename @funcionalidade8()\n");
         return;
     }
-    
-    if (b_tree_filename == NULL) {
-        print_erro("ERROR: invalid parameter @funcionalidade8()\n");
+
+    //Cria um DataManager para fazer o gerenciamento dos dados, ler especificação do TAD
+    DataManager *data_manager = data_manager_create(bin_filename);
+
+    if (data_manager == NULL) {
+        print_erro("ERROR: couldn't create DataManager @funcionalidade1()\n");
         return;
     }
+
+    //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
+    OPEN_RESULT open_result = data_manager_open(data_manager, WRITE);
+    if (open_result != OPEN_OK) {
+        data_manager_delete(&data_manager);
+        print_data_manager_open_result_message(open_result);
+        return;
+    }
+
+    BTHeader *b_tree_header = b_tree_header_create();
+    if (b_tree_header == NULL) {
+        print_erro("ERROR: Couldn't allocate memory for 'b_tree_header' @funcionalidade8()\n");
+        data_manager_delete(&data_manager);
+        return;
+    }
+
+    FILE *b_tree_file = fopen(b_tree_filename, "w+");
+    BTreeManager *b_tree_manager = b_tree_manager_create(b_tree_file, b_tree_header);
+    if (b_tree_manager == NULL) {
+        print_erro("ERROR: Couldn't allocate memory for 'b_tree_manager' @funcionalidade8()\n");
+        data_manager_delete(&data_manager);
+        b_tree_header_delete(&b_tree_header);
+        return;
+    }
+
+
+    RegistryHeader *header = data_manager_get_registry_header(data_manager);
+    int totalRegistries = reg_header_get_registries_count(header);
+    int RRN = -1;
+    
+
+    for (int i = 0; i < totalRegistries; i++) {
+        RRN++;
+        VirtualRegistry *reg = data_manager_fetch_at(data_manager, RRN);
+        if (reg == NULL) {
+            i--;
+            continue;
+        }
+
+        b_tree_manager_insert(b_tree_manager, reg->idNascimento, RRN);
+        virtual_registry_delete(&reg);
+    }
+
+    b_tree_header_delete(&b_tree_header);
+    b_tree_manager_delete(&b_tree_manager);
+    data_manager_delete(&data_manager);
+
+    binarioNaTela(b_tree_filename);
+    return;
 }
 
 void funcionalidade9 (char *bin_filename, char *n_str, char *field, char *value) {
