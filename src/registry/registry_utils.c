@@ -5,6 +5,8 @@
 #include "binary_io.h"
 #include "registry_utils.h"
 #include "string_utils.h"
+#include "debug.h"
+
 
 /*
 	Essa funcao cria uma string vazia com lixo, para variaveis de tamanho fixo. O primeiro caracter e' '\0' e os outros sao '$'
@@ -16,7 +18,7 @@
 void static_value_fill_with_garbage(char **value_ptr, int expectedSize) {
 	#define value (*value_ptr)
 	if (value_ptr == NULL || expectedSize < 0) {
-		fprintf(stderr, "ERROR: invalid parameters @static_value_fill_with_garbage\n");
+		DP("ERROR: invalid parameters @static_value_fill_with_garbage\n");
 		return;
 	}
 

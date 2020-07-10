@@ -7,6 +7,7 @@
 #include "binary_io.h"
 #include "registry_linked_list.h"
 #include "registry_manager.h"
+#include "debug.h"
 
 struct _data_manager {
     char *bin_file_name;
@@ -26,14 +27,14 @@ struct _data_manager {
 DataManager *data_manager_create(char *file_name) {
     //Validação de parâmetros
     if (file_name == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null filename @data_manager_create()\n");
+        DP("ERROR: (parameter) invalid null filename @data_manager_create()\n");
         return NULL;
     }
 
     //Tenta alocar espaço para o DataManager, informando em caso de erro.
     DataManager *data_manager = (DataManager*) malloc(sizeof(DataManager));
     if (data_manager == NULL) {
-        fprintf(stderr, "ERROR: not enough memory for DataManager @data_mananger_create!\n");
+        DP("ERROR: not enough memory for DataManager @data_mananger_create!\n");
         return NULL;
     }
 
@@ -57,19 +58,19 @@ DataManager *data_manager_create(char *file_name) {
 void data_manager_write_headers_to_disk(DataManager *manager) {
     //Validação de parâmetros
     if (manager == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_write_headers_to_disk()\n");
+        DP("ERROR: (parameter) invalid null DataManager @data_manager_write_headers_to_disk()\n");
         return;
     }
 
     //Valida o modo, impedindo tentativas de escrita no modo somente leitura
     if (manager->requested_mode == READ) {
-        fprintf(stderr, "ERROR: trying to write headers on a read-only DataManager @data_manager_write_headers_to_disk()\n");
+        DP("ERROR: trying to write headers on a read-only DataManager @data_manager_write_headers_to_disk()\n");
         return;
     }
 
     //Verifica se o manager não está em um estado inválido, isto é, quando o arquivo não está aberto ou os headers não estão definidos
     if (manager->header == NULL || manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: trying to write headers on a invalid DataManager state @data_manager_write_headers_to_disk()\n");
+        DP("ERROR: trying to write headers on a invalid DataManager state @data_manager_write_headers_to_disk()\n");
         return;
     }
 
@@ -87,12 +88,12 @@ void data_manager_write_headers_to_disk(DataManager *manager) {
 void data_manager_read_headers_from_disk(DataManager *manager) {
     //Validação de parâmetros
     if (manager == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_read_headers_from_disk()\n");
+        DP("ERROR: (parameter) invalid null DataManager @data_manager_read_headers_from_disk()\n");
         return;
     }
 
     if (manager->header == NULL || manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: trying to read headers on a invalid DataManager state @data_manager_read_headers_from_disk()\n");
+        DP("ERROR: trying to read headers on a invalid DataManager state @data_manager_read_headers_from_disk()\n");
         return;
     }
 
@@ -130,7 +131,7 @@ OPEN_RESULT data_manager_open(DataManager *manager, OPEN_MODE mode) {
     //Tenta criar um RegistryManager
     manager->registry_manager = registry_manager_create(manager->bin_file, manager->header);
     if (manager->registry_manager == NULL) {
-        fprintf(stderr, "ERROR: couldn't create RegistryManager @data_manager_open()\n");
+        DP("ERROR: couldn't create RegistryManager @data_manager_open()\n");
         return OPEN_FAILED;
     }
     
@@ -189,7 +190,7 @@ void data_manager_delete(DataManager **manager_ptr) {
 
     //Validação do parâmetro. Deve ser referência ao pointer que aponta para o DataManager
     if (manager_ptr == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null pointer @data_manager_delete()\n");
+        DP("ERROR: (parameter) invalid null pointer @data_manager_delete()\n");
         return;
     }
 
@@ -216,13 +217,13 @@ void data_manager_delete(DataManager **manager_ptr) {
 void data_manager_insert_arr_at_end(DataManager *manager, VirtualRegistry **reg_arr, int arr_size) {
     //Valida o estado atual com um manager instanciado e o arquivo aberto
     if (manager == NULL || manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: invalid DataManager state! @data_manager_insert_at_end\n");
+        DP("ERROR: invalid DataManager state! @data_manager_insert_at_end\n");
         return;
     }
 
     //O arquivo deve ter sido aberto em um modo que permita a escrita
     if (manager->requested_mode == READ) {
-        fprintf(stderr, "ERROR: DataManager is in read-only mode @data_manager_insert_at_end\n");
+        DP("ERROR: DataManager is in read-only mode @data_manager_insert_at_end\n");
         return;
     }
 
@@ -268,7 +269,7 @@ VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *
     //Tenta criar uma lista ligada na qual serão inseridos os registros que condizerem com os termos de busca
     RegistryLinkedList *list = registry_linked_list_create();
     if (list == NULL) {
-        fprintf(stderr, "ERROR: couldn't create RegistryLinkedList @data_manager_fetch()\n");
+        DP("ERROR: couldn't create RegistryLinkedList @data_manager_fetch()\n");
         return NULL;
     }
 
@@ -304,13 +305,13 @@ VirtualRegistryArray *data_manager_fetch(DataManager *manager, VirtualRegistry *
 VirtualRegistry *data_manager_fetch_at(DataManager *manager, int RRN) {
     //Validação de parâmetros
     if (manager == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null DataManager @data_manager_fetch_all()\n");
+        DP("ERROR: (parameter) invalid null DataManager @data_manager_fetch_all()\n");
         return NULL;
     }
 
     //Validação do estado do arquivo binário
     if (manager->bin_file == NULL) {
-        fprintf(stderr, "ERROR: DataManager haven't opened the binary file @data_manager_fetch_all()\n");
+        DP("ERROR: DataManager haven't opened the binary file @data_manager_fetch_all()\n");
         return NULL;
     } 
 
@@ -324,13 +325,13 @@ void data_manager_for_each_match(DataManager *manager, VirtualRegistryArray *mat
     #define reg_man manager->registry_manager
 
     if (callback_func == NULL) {
-        fprintf(stderr, "ERROR: calling data_manager_for_each_match without callback function\n");
+        DP("ERROR: calling data_manager_for_each_match without callback function\n");
         return;
     }
 
     //Validação de parâmetros
     if (manager == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid parameter @data_manager_remove_matches()\n");
+        DP("ERROR: (parameter) invalid parameter @data_manager_remove_matches()\n");
         return;
     }
 
@@ -387,18 +388,18 @@ void data_manager_remove_matches (DataManager *manager, VirtualRegistryArray *ma
 void data_manager_update_at(DataManager *manager, int RRN, VirtualRegistryUpdater *new_data) {
     //Validação de parâmetros
     if (manager == NULL || new_data == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null parameters @data_manager_update_at()\n");
+        DP("ERROR: (parameter) invalid null parameters @data_manager_update_at()\n");
         return;
     }
 
     //Validação do estado do arquivo
     if (manager->bin_file == NULL || manager->registry_manager == NULL) {
-        fprintf(stderr, "ERROR: DataManager is in an invalid state @data_manager_update_at()\n");
+        DP("ERROR: DataManager is in an invalid state @data_manager_update_at()\n");
         return;
     }
 
     if (manager->requested_mode == READ) {
-        fprintf(stderr, "ERROR: DataManager is in read-only mode @data_manager_update_at()\n");
+        DP("ERROR: DataManager is in read-only mode @data_manager_update_at()\n");
         return;
     }
 

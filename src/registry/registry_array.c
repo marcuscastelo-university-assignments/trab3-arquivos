@@ -2,6 +2,7 @@
 #include "registry_array.h"
 
 #include <stdlib.h>
+#include "debug.h"
 
 /*
     Funçãoo para criar uma struct que representa um array de registros.
@@ -16,18 +17,18 @@
 VirtualRegistryArray *virtual_registry_array_create(VirtualRegistry **array, int size) {
     //Validação de parâmetros
     if (size < 0) {
-        fprintf(stderr, "ERROR: (parameter) Invalid array negative size @virtual_registry_array_create()\n");
+        DP("ERROR: (parameter) Invalid array negative size @virtual_registry_array_create()\n");
         return NULL;
     }
     if (array == NULL && size > 0) {
-        fprintf(stderr, "ERROR: (parameter) Invalid null VirtualRegistry* array with non-zero size @virtual_registry_array_create()\n");
+        DP("ERROR: (parameter) Invalid null VirtualRegistry* array with non-zero size @virtual_registry_array_create()\n");
         return NULL;
     }
 
     //Aloca a struct na heap, verificando se a operação foi realizada com sucesso
     VirtualRegistryArray *arr = malloc(sizeof(VirtualRegistryArray));
     if (arr == NULL) {
-        fprintf(stderr, "ERROR: Insuficient memory for VirtualRegistryArray @virtual_registry_array_create()\n");
+        DP("ERROR: Insuficient memory for VirtualRegistryArray @virtual_registry_array_create()\n");
         return NULL;
     }
 
@@ -48,7 +49,7 @@ void virtual_registry_array_delete(VirtualRegistryArray **array_ptr) {
     #define array (*array_ptr)
 
     if (array_ptr == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null array reference @virtual_registry_array_delete()\n");
+        DP("ERROR: (parameter) invalid null array reference @virtual_registry_array_delete()\n");
         return;
     }
 

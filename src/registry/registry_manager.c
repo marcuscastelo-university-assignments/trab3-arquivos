@@ -8,8 +8,7 @@
 #include "registry.h"
 #include "string_utils.h"
 #include "registry_manager.h"
-
-#define print_error(x) fprintf(stderr, x);
+#include "debug.h"
 
 #define REG_SIZE 128
 
@@ -35,7 +34,7 @@ RegistryManager *registry_manager_create(FILE *bin_file, RegistryHeader *header)
 	//Tenta alocar memória
 	RegistryManager *manager = malloc(sizeof(RegistryManager));
 	if (manager == NULL) {
-		fprintf(stderr, "ERROR: not enough memory for RegistryManager @registry_manager_create()\n");
+		DP("ERROR: not enough memory for RegistryManager @registry_manager_create()\n");
 		return NULL;
 	}
 
@@ -58,7 +57,7 @@ RegistryManager *registry_manager_create(FILE *bin_file, RegistryHeader *header)
 void registry_manager_delete(RegistryManager **manager_ptr) {
 	//Validação de parâmetros
 	if (manager_ptr == NULL) {
-		fprintf(stderr, "ERROR: invalid parameter @registry_manager_delete()\n");
+		DP("ERROR: invalid parameter @registry_manager_delete()\n");
 		return;
 	}
 	#define manager (*manager_ptr)
@@ -85,12 +84,12 @@ void registry_manager_delete(RegistryManager **manager_ptr) {
 void registry_manager_seek(RegistryManager *manager, int RRN) {
 	//Validação de parâmetros
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_seek()");
+		DP("ERROR: invalid parameter @registry_manager_seek()");
 		return;
 	}
 	
 	if (RRN < 0) {
-		print_error("ERROR: invalid given RRN @registry_manager_seek()\n");
+		DP("ERROR: invalid given RRN @registry_manager_seek()\n");
 	}
 
 	fseek(manager->bin_file, (RRN+1) * REG_SIZE, SEEK_SET);
@@ -106,7 +105,7 @@ void registry_manager_seek(RegistryManager *manager, int RRN) {
 void registry_manager_seek_first(RegistryManager *manager) {
 	//Validação de parâmetros
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_seek_first\n");
+		DP("ERROR: invalid parameter @registry_manager_seek_first\n");
 		return;
 	}
 
@@ -122,7 +121,7 @@ void registry_manager_seek_first(RegistryManager *manager) {
 */
 void registry_manager_seek_end(RegistryManager *manager) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_seek_end\n");
+		DP("ERROR: invalid parameter @registry_manager_seek_end\n");
 		return;
 	}
 
@@ -139,7 +138,7 @@ void registry_manager_seek_end(RegistryManager *manager) {
 */
 VirtualRegistry *registry_manager_read_current(RegistryManager *manager) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_read_current()\n");
+		DP("ERROR: invalid parameter @registry_manager_read_current()\n");
 		return NULL;
 	}
 
@@ -163,7 +162,7 @@ VirtualRegistry *registry_manager_read_current(RegistryManager *manager) {
 */
 VirtualRegistry *registry_manager_read_at(RegistryManager *manager, int RRN) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_read_at()\n");
+		DP("ERROR: invalid parameter @registry_manager_read_at()\n");
 		return NULL;
 	}
 	
@@ -182,7 +181,7 @@ VirtualRegistry *registry_manager_read_at(RegistryManager *manager, int RRN) {
 */
 void registry_manager_write_current(RegistryManager *manager, VirtualRegistry *reg_data) {
 	if (manager == NULL || reg_data == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_write_current()\n");
+		DP("ERROR: invalid parameter @registry_manager_write_current()\n");
 		return;
 	}
 
@@ -202,7 +201,7 @@ void registry_manager_write_current(RegistryManager *manager, VirtualRegistry *r
 */
 void registry_manager_write_at(RegistryManager *manager, int RRN, VirtualRegistry *reg_data) {
 	if (manager == NULL || reg_data == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_write_at()\n");
+		DP("ERROR: invalid parameter @registry_manager_write_at()\n");
 		return;
 	}
 
@@ -220,7 +219,7 @@ void registry_manager_write_at(RegistryManager *manager, int RRN, VirtualRegistr
 */
 void registry_manager_delete_current (RegistryManager *manager) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_delete_current()\n");
+		DP("ERROR: invalid parameter @registry_manager_delete_current()\n");
 		return;
 	}
 
@@ -241,7 +240,7 @@ void registry_manager_delete_current (RegistryManager *manager) {
 */
 void registry_manager_delete_at (RegistryManager *manager, int RRN) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_delete_at()\n");
+		DP("ERROR: invalid parameter @registry_manager_delete_at()\n");
 		return;
 	}
 
@@ -262,7 +261,7 @@ void registry_manager_delete_at (RegistryManager *manager, int RRN) {
 */
 bool registry_manager_is_current_deleted (RegistryManager *manager) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_is_current_deleted()\n");
+		DP("ERROR: invalid parameter @registry_manager_is_current_deleted()\n");
 		return false;
 	}
 
@@ -285,7 +284,7 @@ bool registry_manager_is_current_deleted (RegistryManager *manager) {
 */
 void registry_manager_jump_registry (RegistryManager *manager, int direction) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_jump_registry()\n");
+		DP("ERROR: invalid parameter @registry_manager_jump_registry()\n");
 		return;
 	}
 
@@ -306,7 +305,7 @@ void registry_manager_jump_registry (RegistryManager *manager, int direction) {
 */
 void registry_manager_update_at(RegistryManager *manager, int RRN, VirtualRegistry *reg_data) {
 	if (manager == NULL || reg_data == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_update_at()\n");
+		DP("ERROR: invalid parameter @registry_manager_update_at()\n");
 		return;
 	}
 
@@ -326,7 +325,7 @@ void registry_manager_update_at(RegistryManager *manager, int RRN, VirtualRegist
 */
 void registry_manager_update_current(RegistryManager *manager, VirtualRegistry *new_data) {
 	if (manager == NULL || new_data == NULL) {
-		print_error("ERROR: invalid parameter @registry_manager_update_current()\n");
+		DP("ERROR: invalid parameter @registry_manager_update_current()\n");
 		return;
 	}
 

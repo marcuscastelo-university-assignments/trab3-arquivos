@@ -8,8 +8,9 @@
 #include "b_tree_header.h"
 #include "b_tree_node.h"
 #include "string_utils.h"
+#include "debug.h"
 
-#define print_error(x) fprintf(stderr, x);
+#define print_error(x) DP(x);
 
 #define REG_SIZE 72
 
@@ -41,7 +42,7 @@ BTreeManager *b_tree_manager_create(FILE *bin_file, BTHeader *header) {
 	//Tenta alocar memória
 	BTreeManager *manager = malloc(sizeof(BTreeManager));
 	if (manager == NULL) {
-		fprintf(stderr, "ERROR: not enough memory for BTreeManager @b_tree_manager_create()\n");
+		DP("ERROR: not enough memory for BTreeManager @b_tree_manager_create()\n");
 		return NULL;
 	}
 
@@ -64,7 +65,7 @@ BTreeManager *b_tree_manager_create(FILE *bin_file, BTHeader *header) {
 void b_tree_manager_delete(BTreeManager **manager_ptr) {
 	//Validação de parâmetros
 	if (manager_ptr == NULL) {
-		fprintf(stderr, "ERROR: invalid parameter @b_tree_manager_delete()\n");
+		DP("ERROR: invalid parameter @b_tree_manager_delete()\n");
 		return;
 	}
 	#define manager (*manager_ptr)

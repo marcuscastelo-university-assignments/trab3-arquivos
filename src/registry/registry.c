@@ -6,14 +6,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-
+#include "debug.h"
 
 //TODO: comentar e usar mais vezes?
 VirtualRegistry *virtual_registry_create_copy(VirtualRegistry *base) {
     VirtualRegistry *reg_data = virtual_registry_create();
     
     if (reg_data == NULL) {
-        fprintf(stderr, "ERROR: Insuficient memory on virtual_registry_create_copy()\n");
+        DP("ERROR: Insuficient memory on virtual_registry_create_copy()\n");
         return NULL;
     }
     
@@ -52,7 +52,7 @@ VirtualRegistry *virtual_registry_create_masked(RegistryFieldsMask mask) {
     VirtualRegistry *reg_data = malloc(sizeof(VirtualRegistry));
     
     if (reg_data == NULL) {
-        fprintf(stderr, "ERROR: Insuficient memory on virtual_registry_create()\n");
+        DP("ERROR: Insuficient memory on virtual_registry_create()\n");
         return NULL;
     }
 
@@ -79,7 +79,7 @@ void virtual_registry_delete(VirtualRegistry **reg_data_ptr) {
     #define reg_data (*reg_data_ptr)
     
     if (reg_data_ptr == NULL) {
-        fprintf(stderr, "ERROR: invalid pointer @virtual_registry_delete\n");
+        DP("ERROR: invalid pointer @virtual_registry_delete\n");
         return;
     }
 
@@ -110,7 +110,7 @@ void virtual_registry_delete(VirtualRegistry **reg_data_ptr) {
 */
 void virtual_registry_set_field(VirtualRegistry *reg_data, char *field_name, char *field_value) {
     if (reg_data == NULL || field_name == NULL || field_value == NULL) {
-        fprintf(stderr, "ERROR: Invalid parameters (NULL) in virtual_registry_set_field()\n");
+        DP("ERROR: Invalid parameters (NULL) in virtual_registry_set_field()\n");
         return;
     }
     
@@ -161,7 +161,7 @@ void virtual_registry_set_field(VirtualRegistry *reg_data, char *field_name, cha
     }
 
     //Se o campo informado não for nenhum dos acima especificados, exibir mensagem de erro
-    fprintf(stderr, "ERROR: informed field doesn't exist: [%s], at virtual_registry_set_field()\n", field_name);  
+    DP("ERROR: informed field doesn't exist: [%s], at virtual_registry_set_field()\n", field_name);  
 } 
 
 //Define o valor encapsulado da mascara de bits do registro
@@ -183,7 +183,7 @@ RegistryFieldsMask virtual_registry_get_fieldmask(VirtualRegistry *reg_data) {
 */
 void virtual_registry_print (VirtualRegistry *reg_data) {
     if (reg_data == NULL) {
-        fprintf(stderr, "Nao ha registro para mostrar em string em virtual_registry_print()\n");
+        DP("Nao ha registro para mostrar em string em virtual_registry_print()\n");
         return;
     }
     
@@ -205,7 +205,7 @@ void virtual_registry_print (VirtualRegistry *reg_data) {
 */
 void virtual_registry_print_all_fields (VirtualRegistry *reg_data) {
     if (reg_data == NULL) {
-        fprintf(stderr, "Nao ha registro para mostrar em string\n");
+        DP("Nao ha registro para mostrar em string\n");
         return;
     }
 
@@ -241,7 +241,7 @@ bool virtual_registry_compare (VirtualRegistry *reg_data_1, VirtualRegistry *reg
     RegistryFieldsMask mask = virtual_registry_get_fieldmask(reg_data_1) & virtual_registry_get_fieldmask(reg_data_2);
 
     if (mask != virtual_registry_get_fieldmask(reg_data_1) && mask != virtual_registry_get_fieldmask(reg_data_2)) {
-        fprintf(stderr, "ERROR: the mask of one register must be a superset of the other's mask! @virtual_registry_compare\n");
+        DP("ERROR: the mask of one register must be a superset of the other's mask! @virtual_registry_compare\n");
         return false;
     }
 
@@ -284,7 +284,7 @@ bool virtual_registry_compare (VirtualRegistry *reg_data_1, VirtualRegistry *reg
 */
 char *virtual_registry_read_value_from_input(char *field_name) {
     if (field_name == NULL) {
-        fprintf(stderr, "ERROR: invalid parameter in virtual_registry_read_value_from_input()\n");
+        DP("ERROR: invalid parameter in virtual_registry_read_value_from_input()\n");
         return NULL;
     }
     
@@ -312,7 +312,7 @@ VirtualRegistry *virtual_registry_create_from_input(bool full_register) {
     //Tenta alocar memória
     VirtualRegistry *reg_data = virtual_registry_create_masked(full_register? MASK_ALL: MASK_NONE);
     if (reg_data == NULL) {
-        fprintf(stderr, "ERROR: Can't allocate memory in virtual_registry_get_registry_fields_from_input()\n");
+        DP("ERROR: Can't allocate memory in virtual_registry_get_registry_fields_from_input()\n");
         return NULL;
     }
 

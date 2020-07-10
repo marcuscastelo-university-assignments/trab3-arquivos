@@ -23,8 +23,7 @@
 
 #include "string_utils.h"
 #include "bool.h"
-
-#define print_erro(x) fprintf(stderr, x);
+#include "debug.h"
 
 typedef struct _Funcionalidade6ExtensionInfo
 {
@@ -59,7 +58,7 @@ void print_data_manager_open_result_message(OPEN_RESULT open_result) {
  */
 void funcionalidade1(char *csv_filename, char *bin_filename) {
     if (bin_filename == NULL) {
-        print_erro("ERROR: invalid filename @funcionalidade1()\n");
+        DP("ERROR: invalid filename @funcionalidade1()\n");
         return;
     }
     
@@ -67,7 +66,7 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
     DataManager *data_manager = data_manager_create(bin_filename);
 
     if (data_manager == NULL) {
-        print_erro("ERROR: couldn't create DataManager @funcionalidade1()\n");
+        DP("ERROR: couldn't create DataManager @funcionalidade1()\n");
         return;
     }
 
@@ -119,7 +118,7 @@ void _DMForeachCallback_print_register(DataManager *manager, VirtualRegistry *re
  */
 void funcionalidade2(char *bin_filename) {
     if (bin_filename == NULL) {
-        fprintf(stderr, "ERROR: invalid filename @funcionalidade2()\n");
+        DP("ERROR: invalid filename @funcionalidade2()\n");
         return;
     }
 
@@ -127,7 +126,7 @@ void funcionalidade2(char *bin_filename) {
     DataManager *data_manager = data_manager_create(bin_filename);
     
     if (data_manager == NULL) {
-        print_erro("ERROR: couldn't allocate memory for data_manager @funcionalidade2()\n");
+        DP("ERROR: couldn't allocate memory for data_manager @funcionalidade2()\n");
         return;
     }
 
@@ -156,7 +155,7 @@ void funcionalidade2(char *bin_filename) {
  */
 void funcionalidade3 (char *bin_filename) {
     if (bin_filename == NULL) {
-        print_erro("ERROR: (parameter) invalid null filename @funcionalidade3()\n");
+        DP("ERROR: (parameter) invalid null filename @funcionalidade3()\n");
         return;
     }
 
@@ -164,7 +163,7 @@ void funcionalidade3 (char *bin_filename) {
     DataManager *data_manager = data_manager_create(bin_filename);
 
     if (data_manager == NULL) {
-        print_erro("ERROR: couldn't create DataManager @funcionalidade3()\n");
+        DP("ERROR: couldn't create DataManager @funcionalidade3()\n");
         return;
     }
     
@@ -181,14 +180,14 @@ void funcionalidade3 (char *bin_filename) {
     //Le os campos e valores dados pelo usuarios para ser usado na busca
     VirtualRegistry *reg_search_terms = virtual_registry_create_from_input(false);
     if (reg_search_terms == NULL) {
-        print_erro("ERROR: couldn't get registry filters from user @funcionalidade3\n");
+        DP("ERROR: couldn't get registry filters from user @funcionalidade3\n");
         return;
     }
 
     //Procura no arquivo os registros que correspondam ao filtro do usuario e retorna no formato de VirtualRegistryArray*
     VirtualRegistryArray *reg_arr = data_manager_fetch(data_manager, reg_search_terms);
     if (reg_arr == NULL) {
-        fprintf(stderr, "ERROR: couldn't fetch data @funcionalidade3()\n");
+        DP("ERROR: couldn't fetch data @funcionalidade3()\n");
         return;
     }
 
@@ -215,12 +214,12 @@ void funcionalidade3 (char *bin_filename) {
 */
 void funcionalidade4 (char *bin_filename, char *RRN_str) {
     if (bin_filename == NULL) {
-        print_erro("ERROR: invalid filename @funcionalidade4()\n");
+        DP("ERROR: invalid filename @funcionalidade4()\n");
         return;
     }
 
     if (RRN_str == NULL) {
-        print_erro("ERROR: invalid RRN @funcionalidade5()\n");
+        DP("ERROR: invalid RRN @funcionalidade5()\n");
         return;
     }
 
@@ -229,7 +228,7 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
     int RRN = atoi(RRN_str);
 
     if (data_manager == NULL) {
-        print_erro("ERROR: couldn't allocate memory for data_manager @funcionalidade4()\n");
+        DP("ERROR: couldn't allocate memory for data_manager @funcionalidade4()\n");
         return;
     }
     
@@ -269,12 +268,12 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
 void funcionalidade5 (char *bin_filename, char *n_str) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
-        print_erro("ERROR: invalid filename @funcionalidade5()\n");
+        DP("ERROR: invalid filename @funcionalidade5()\n");
         return;
     }
 
     if (n_str == NULL) {
-        print_erro("ERROR: invalid parameter @funcionalidade5()\n");
+        DP("ERROR: invalid parameter @funcionalidade5()\n");
         return;
     }
 
@@ -283,7 +282,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     int n = atoi(n_str);
 
     if (data_manager == NULL) {
-        print_erro("ERROR: couldn't allocate memory for data_manager @funcionalidade5()\n");
+        DP("ERROR: couldn't allocate memory for data_manager @funcionalidade5()\n");
         return;
     }
     
@@ -307,7 +306,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     VirtualRegistryFilter *reg_filter;  
     
     if (list == NULL) {
-        print_erro("ERROR: couldn't allocate memory for RegistryLinkedList @funcionalidade5()\n");
+        DP("ERROR: couldn't allocate memory for RegistryLinkedList @funcionalidade5()\n");
         data_manager_delete(&data_manager);
         return;
     }
@@ -317,7 +316,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
         //Cria um filtro (false indica que o registro deve ser interpretado como filtro)
         reg_filter = virtual_registry_create_from_input(false); //ler documentação de virtual_registry_create_from_input()
         if (reg_filter == NULL) {
-            print_erro("ERROR: couldn't allocate memory for VirtualRegistry @funcionalidade5()\n");
+            DP("ERROR: couldn't allocate memory for VirtualRegistry @funcionalidade5()\n");
             data_manager_delete(&data_manager);
             registry_linked_list_delete(&list, true);
             return;
@@ -332,7 +331,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     reg_arr = registry_linked_list_to_array(list);
     if (reg_arr == NULL) {
         //A mensagem de erro é um pouco genérica pois, nas funções interiores, o erro é especificado
-        print_erro("ERRO: Failed to convert linked list to RegistryDataArray @funcionalidade5()\n");
+        DP("ERRO: Failed to convert linked list to RegistryDataArray @funcionalidade5()\n");
         data_manager_delete(&data_manager);
         registry_linked_list_delete(&list, true);
         return;
@@ -361,19 +360,19 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
 void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionInfo *extInfo) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
-        print_erro("ERROR: invalid filename @funcionalidade6()\n");
+        DP("ERROR: invalid filename @funcionalidade6()\n");
         return;
     }
     
     if (n_str == NULL) {
-        print_erro("ERROR: invalid parameter @funcionalidade6()\n");
+        DP("ERROR: invalid parameter @funcionalidade6()\n");
         return;
     }
 
     //Tenta criar um DataManager
     DataManager *data_manager = data_manager_create(bin_filename);
     if (data_manager == NULL) {
-        fprintf(stderr, "ERRO: unable to create DataManager @funcionalidade6\n");
+        DP("ERRO: unable to create DataManager @funcionalidade6\n");
         return;
     }
 
@@ -423,19 +422,19 @@ void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionI
 void funcionalidade7 (char *bin_filename, char *n_str) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
-        print_erro("ERROR: invalid filename @funcionalidade7()\n");
+        DP("ERROR: invalid filename @funcionalidade7()\n");
         return;
     }
     
     if (n_str == NULL) {
-        print_erro("ERROR: invalid parameter @funcionalidade7()\n");
+        DP("ERROR: invalid parameter @funcionalidade7()\n");
         return;
     }
 
     //Tenta criar o DataManager
     DataManager *data_manager = data_manager_create(bin_filename);
     if (data_manager == NULL) {
-        fprintf(stderr, "ERRO: unable to create DataManager @funcionalidade7\n");
+        DP("ERRO: unable to create DataManager @funcionalidade7\n");
         return;
     }
 
@@ -458,7 +457,7 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
         //Cria um registro do tipo updater (registro com mascara de bits)
         reg_updater = virtual_registry_create_from_input(false); //O false indica que o registro possui mascara de bits (ler documentação de virtual_registry_create_from_input())
         if (reg_updater == NULL) {
-            fprintf(stderr, "ERROR: failed to create VirtualRegistry from input @funcionalidade7()\n");
+            DP("ERROR: failed to create VirtualRegistry from input @funcionalidade7()\n");
             break;
         }
         //Atualiza no disco
@@ -487,7 +486,7 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
     DataManager *data_manager = data_manager_create(bin_filename);
 
     if (data_manager == NULL) {
-        print_erro("ERROR: couldn't create DataManager @funcionalidade1()\n");
+        print_erro("ERROR: couldn't create DataManager @funcionalidade8()\n");
         return;
     }
 
@@ -568,7 +567,7 @@ char **init_params(int quantity){
     char **params = malloc(sizeof(char*) * quantity);
 
     if (params == NULL) {
-        fprintf(stderr, "ERROR: not enough memory @init_params!\n");
+        DP("ERROR: not enough memory @init_params!\n");
         exit(1);
         return NULL;
     }

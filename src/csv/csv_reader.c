@@ -7,6 +7,7 @@
 
 #include "registry_linked_list.h"
 #include "string_utils.h"
+#include "debug.h"
 
 /**
  *  Lê uma linha completa do CSV
@@ -74,7 +75,7 @@ VirtualRegistry *csv_read_line(FILE *file_stream) {
 VirtualRegistryArray *csv_read_all_lines(const char *file_name) {
     //1. Tenta abrir o arquivo csv
     if (file_name == NULL) {
-        fprintf(stderr, "ERROR: (parameter) invalid null file name @csv_read_all_lines!\n");
+        DP("ERROR: (parameter) invalid null file name @csv_read_all_lines!\n");
         return NULL;
     }
     

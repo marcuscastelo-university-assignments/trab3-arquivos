@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "debug.h"
+
+
 /**
  *  Converte o nome do campo em string para uma mascara de bits.
  *  Utilizado na leitura de filtros de busca e atualizações.
@@ -14,7 +17,7 @@
  */
 RegistryFieldsMask registry_mask_from_field_name(char *field_name) {
     if (field_name == NULL) {
-        fprintf(stderr, "ERROR: Invalid parameters (NULL) in registry_mask_from_field_name()\n");
+        DP("ERROR: Invalid parameters (NULL) in registry_mask_from_field_name()\n");
         return MASK_NONE;
     }
     
@@ -29,6 +32,6 @@ RegistryFieldsMask registry_mask_from_field_name(char *field_name) {
     if (!strcmp(field_name, "sexoBebe"))        return MASK_SEXOBEBE;
 
     //Se o campo informado não for nenhum dos acima especificados, exibir mensagem de erros
-    fprintf(stderr, "ERROR: informed field doesn't exist: [%s], at registry_mask_from_field_name()\n", field_name); 
+    DP("ERROR: informed field doesn't exist: [%s], at registry_mask_from_field_name()\n", field_name); 
     return MASK_NONE;
 }
