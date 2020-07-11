@@ -3,7 +3,7 @@ SRC = ./src
 COMP = gcc
 FLAGS = -Wall -g
 
-SRC_RULES = binary header registry data_manager utils csv b_tree
+SRC_RULES = binary header registry utils csv b_tree
 
 all: $(SRC_RULES)
 	@ $(COMP) *.o $(SRC)/main.c -o prog $(INC) $(FLAGS) && \

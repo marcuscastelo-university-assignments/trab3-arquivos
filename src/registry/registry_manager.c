@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "binary_io.h"
 #include "binary_registry.h"
@@ -9,87 +10,185 @@
 #include "string_utils.h"
 #include "registry_manager.h"
 #include "debug.h"
+#include "registry_linked_list.h"
 
 #define REG_SIZE 128
 
-/*
-	Struct que representa o gerenciador de registros, usada para debug
-	e para diferenciacao de nivel de complexidade no programa
-*/
 struct _registry_manager {
-	RegistryHeader *header;			//Referência ao header gerenciado pelo DataManager
-	FILE *bin_file;			//ponteiro do arquivo aberto e tendo seus registros gerenciados
+    char *bin_file_name;
+    FILE *bin_file;
+    OPEN_MODE requested_mode;
+    RegistryHeader *header;
 	int currRRN;			//RRN atual do ponteiro
 };
 
 
-/*
-	Funcao que cria um gerenciador de registros, alocando memoria e definindo seus campos
-	Parametros:
-		bin_file -> ponteiro do arquivo que tera' seus registros gerenciados.
-	Retorno:
-		RegistryManager* . O gerenciador de registros.
-*/
-RegistryManager *registry_manager_create(FILE *bin_file, RegistryHeader *header) {
-	//Tenta alocar memória
-	RegistryManager *manager = malloc(sizeof(RegistryManager));
-	if (manager == NULL) {
-		DP("ERROR: not enough memory for RegistryManager @registry_manager_create()\n");
-		return NULL;
-	}
+/**
+ *  Factory de RegistryManager, cria uma instância com valores padrão.
+ *  Parâmetros: nenhum
+ *  Retorno: 
+ *      RegistryManager* -> instância criada 
+ */
+RegistryManager *registry_manager_create(void) {
+    //Tenta alocar espaço para o RegistryManager, informando em caso de erro.
+    RegistryManager *registry_manager = (RegistryManager*) malloc(sizeof(RegistryManager));
+    if (registry_manager == NULL) {
+        DP("ERROR: not enough memory for RegistryManager @data_mananger_create!\n");
+        return NULL;
+    }
 
-	//Define os valores iniciais
-	manager -> header = header;
-	manager -> bin_file = bin_file;
-	manager -> currRRN = -1;
-	return manager;
+    //Define os valores da struct como os padrões
+    registry_manager->bin_file_name = NULL;
+    registry_manager->bin_file = NULL;
+    registry_manager->requested_mode = READ;
+    registry_manager->header = NULL;
+	registry_manager->currRRN = -1;
+
+    return registry_manager;
 }
 
+/**
+ *  Abre ou cria um arquivo binário, o qual será gerenciado pelo RegistryManager.
+ *  Parâmetros:
+ *      RegistryManager *manager -> instância do gerenciador
+ *		char* bin_filename -> nome do arquivo (caminho completo)
+ *      OPEN_MODE -> READ, CREATE ou MODIFY, indicando o modo de abertura do arquivo
+ *  Retorno:
+ *      OPEN_RESULT -> resultado da abertura (ler a documentação de OPEN_RESULT)
+ * 
+ */
+OPEN_RESULT registry_manager_open(RegistryManager *manager, char* bin_filename, OPEN_MODE mode) {
+	//Validação dos parâmetros, informando o código do problema por meio de um enum
+    if (manager == NULL) return OPEN_INVALID_ARGUMENT;
 
-/*
-	Funcao que desaloca a memoria de um gerenciador de registros. 
-	Essa funcao NAO fecha o arquivo que estava sendo gerenciado
-	Parametros:
-		manager_ptr -> o endereco do gerenciador de registros
-	Retorno:
-		nao ha retorno 
-*/
-void registry_manager_delete(RegistryManager **manager_ptr) {
 	//Validação de parâmetros
-	if (manager_ptr == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_delete()\n");
-		return;
+    if (bin_filename == NULL) {
+        DP("ERROR: (parameter) invalid null filename @registry_manager_open()\n");
+        return OPEN_INVALID_ARGUMENT;
+    }
+
+	if (manager->bin_file_name != NULL) {
+		DP("WARNING: opening new file before closing file already opened! @registry_manager_open()\n");
+		return OPEN_INVALID_ARGUMENT;
 	}
-	#define manager (*manager_ptr)
 
-	//Já foi liberado
-	if (manager == NULL) return;
+	//Define o nome do arquivo no manager
+	manager->bin_file_name = strdup(bin_filename);
 
-	//Redefine os valores ao padrão inicial
-	manager -> bin_file = NULL;
-	manager -> currRRN = -1;
-	free(manager);
-	manager = NULL;
-	#undef manager
+    //Vetor de conversão do enum modo para a string que o representa (READ = rb, CREATE = )
+    static char* mode_to_str[] = {"rb", "wb+", "rb+"};
+
+    //Guarda o modo de abertura para uso em outras funções
+    manager->requested_mode = mode;
+
+    //Abre o arquivo binário no modo selecionado (ler os modos)
+    manager->bin_file = fopen(manager->bin_file_name, mode_to_str[mode]);
+
+    //Se houver um erro na abertura do arquivo, retornar o erro por meio de um enum
+    if (manager->bin_file == NULL) return OPEN_FAILED; 
+
+    //Inicializa os headers com valores padrão (ou será usado para a escrita de um novo arquivo, ou substituído pelos headers do arquivo existente)
+    manager->header = reg_header_create();
+    
+    //Se o modo for CREATE, ou seja, criar um novo arquivo, defina os headers com valores iniciais (RAM -> disco)
+    if (mode == CREATE) {
+        reg_header_write_to_bin(manager->header, manager->bin_file);
+    } else { 
+        //Se for outro modo, ou seja, o arquivo já existe, atualize o headers (disco -> RAM) e certifique-se de que o arquivo está consistente e não vazio
+        reg_header_read_from_bin(manager->header, manager->bin_file);
+        if (reg_header_get_status(manager->header) != '1') return OPEN_INCONSISTENT;
+
+        if (mode == MODIFY) { 
+			//Se houver intenção de modificar o arquivo, defina o status como inconsistente
+            reg_header_set_status(manager->header, '0');
+            reg_header_write_to_bin(manager->header, manager->bin_file);
+        }
+		
+
+		//TODO: parar de usar OPEN_EMPTY
+		else if (mode == READ) //Se o modo for somente leitura e o arquivo estiver vazio, retorne erro
+			if (reg_header_get_registries_count(manager->header) == 0) return OPEN_EMPTY;
+    }
+    
+    return OPEN_OK;
+}
+
+/**
+ *  Fecha o arquivo binário, limpando a memória de quaisquer estruturas auxiliares utilizadas
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que possui o arquivo aberto
+ *  Retorno: void
+ */
+void registry_manager_close(RegistryManager *manager) {
+    //Verifica se o manager já foi deletado ou se o arquivo já foi fechado
+    if (manager == NULL || manager->bin_file == NULL) return;
+    
+    if (manager->requested_mode != READ) {
+		//Marca o arquivo como consistente. (OBS: não é necessário no caso da leitura, pois nenhuma modificação foi feita)
+        reg_header_set_status(manager->header, '1');
+		//Salva os headers no disco
+        registry_manager_write_headers_to_disk(manager);
+    }
+
+	//Limpa a memória dos headers na RAM
+    reg_header_delete(&manager->header);
+
+    //fecha o arquivo
+    fclose(manager->bin_file);
+	//Marca qua não existe arquivo aberto
+    manager->bin_file = NULL;
+
+    free(manager->bin_file_name);
+	//TODO: ver a possibilidade de tirar esse membro da struct
+	manager->bin_file_name = NULL;
+
+	manager->currRRN = -1;
+}
+
+
+/**
+ *  Destroi o RegistryManager, ou seja, libera toda a memória por ele utilizada.
+ *  OBS: se o arquivo não tiver sido fechado anteriormente, ele é fechado nessa função
+ *  Parâmetros:
+ *      RegistryManager **manager_ptr -> referência do pointer usado pelo programador.
+ *  Retorno: void
+ */
+void registry_manager_free(RegistryManager **manager_ptr) {
+    #define manager (*manager_ptr)
+
+    //Validação do parâmetro. Deve ser referência ao pointer que aponta para o RegistryManager
+    if (manager_ptr == NULL) {
+        DP("ERROR: (parameter) invalid null pointer @registry_manager_free()\n");
+        return;
+    }
+
+    //Fecha o arquvo aberto pelo RegistryManager se já não tiver sido fechado.
+    registry_manager_close(manager);
+
+    free(manager);
+    manager = NULL;
+
+    #undef manager
 }
 
 
 /*
-	Funcao para fazer seek no arquivo sendo gerenciado
+	Funcao (privada) para fazer seek no arquivo sendo gerenciado
 	Parametros:
 		manager -> o gerenciador que contem o arquivo onde sera feito o seek
 		RRN -> RRN para onde o ponteiro sera levado
 	Retorno: void
 */
-void registry_manager_seek(RegistryManager *manager, int RRN) {
+static void _seek_registry(RegistryManager *manager, int RRN) {
 	//Validação de parâmetros
 	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_seek()");
+		DP("ERROR: invalid parameter @_seek_registry()\n");
 		return;
 	}
 	
 	if (RRN < 0) {
-		DP("ERROR: invalid given RRN @registry_manager_seek()\n");
+		DP("ERROR: invalid given RRN @_seek_registry()\n");
+		return;
 	}
 
 	fseek(manager->bin_file, (RRN+1) * REG_SIZE, SEEK_SET);
@@ -102,32 +201,16 @@ void registry_manager_seek(RegistryManager *manager, int RRN) {
 		manager -> o gerenciador que contem o arquivo onde sera feito o seek
 	Retorno: void
 */
-void registry_manager_seek_first(RegistryManager *manager) {
-	//Validação de parâmetros
-	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_seek_first\n");
-		return;
-	}
-
-	registry_manager_seek(manager, 0);
-}
+static void _seek_first_registry(RegistryManager *manager) { _seek_registry(manager, 0); }
 
 
 /*
-	Funcao que faz fseek para o ultimo registro
+	Funcao que faz fseek para a posição após o ultimo registro (para, por exemplo, a inserção de um novo registro)
 	Parametros:
 		manager -> o gerenciador que contem o arquivo onde sera feito o seek
 	Retorno: void
 */
-void registry_manager_seek_end(RegistryManager *manager) {
-	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_seek_end\n");
-		return;
-	}
-
-	int end = reg_header_get_next_RRN(manager->header);
-	registry_manager_seek(manager, end);
-}
+static void _seek_new_registry(RegistryManager *manager) { _seek_registry(manager, reg_header_get_next_RRN(manager->header)); }
 
 /*
 	Funcao que le um registro, precisa estar exatamente no comeco do registro para funcionar
@@ -136,14 +219,9 @@ void registry_manager_seek_end(RegistryManager *manager) {
 	Retorno:
 		VirtualRegistry* -> O registro lido. NULL caso o registro tenha sido removido
 */
-VirtualRegistry *registry_manager_read_current(RegistryManager *manager) {
+static VirtualRegistry *_read_current_registry(RegistryManager *manager) {
 	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_read_current()\n");
-		return NULL;
-	}
-
-	if (registry_manager_is_current_deleted(manager) == true) {	//verifica se o registro foi removido
-		registry_manager_jump_registry(manager, FRONT);					//caso tenha sido removido, pula para o proximo registro
+		DP("ERROR: invalid parameter @_read_current_registry()\n");
 		return NULL;
 	}
 
@@ -160,14 +238,14 @@ VirtualRegistry *registry_manager_read_current(RegistryManager *manager) {
 	Retorno:
 		VirtualRegistry* -> O registro lido. NULL caso o registro tenha sido removido
 */
-VirtualRegistry *registry_manager_read_at(RegistryManager *manager, int RRN) {
+static VirtualRegistry *_read_registry_at(RegistryManager *manager, int RRN) {
 	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_read_at()\n");
+		DP("ERROR: invalid parameter @_read_registry_at()\n");
 		return NULL;
 	}
 	
-	registry_manager_seek(manager, RRN);			//faz o seek do RRN
-	return registry_manager_read_current(manager);	//le o registro e retorna
+	_seek_registry(manager, RRN);			//faz o seek do RRN
+	return _read_current_registry(manager);	//le o registro e retorna
 }
 
 
@@ -179,9 +257,9 @@ VirtualRegistry *registry_manager_read_at(RegistryManager *manager, int RRN) {
 		reg_data -> o registro que sera escrito
 	Retorno: void
 */
-void registry_manager_write_current(RegistryManager *manager, VirtualRegistry *reg_data) {
+static void _write_current_registry(RegistryManager *manager, VirtualRegistry *reg_data) {
 	if (manager == NULL || reg_data == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_write_current()\n");
+		DP("ERROR: invalid parameter @_write_current_registry()\n");
 		return;
 	}
 
@@ -190,26 +268,6 @@ void registry_manager_write_current(RegistryManager *manager, VirtualRegistry *r
 	manager->currRRN++;
 }
 
-
-/*
-	Escreve um registro em um RRN dado
-	Paramentros:
-		manager -> o gerenciador de registro que tera' um registro lido em seu binario
-		RRN -> RRN do local onde sera escrito o registro
-		reg_data -> o registro que sera escrito
-	Retorno: void
-*/
-void registry_manager_write_at(RegistryManager *manager, int RRN, VirtualRegistry *reg_data) {
-	if (manager == NULL || reg_data == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_write_at()\n");
-		return;
-	}
-
-	registry_manager_seek(manager, RRN);				//faz o seek
-	registry_manager_write_current(manager, reg_data);	//escreve no binario
-}
-
-
 /*
 	Funcao que deleta o registro onde o ponteiro esta'
 	Precisa estar exatamente no comeco do registro para ser eficiente
@@ -217,61 +275,15 @@ void registry_manager_write_at(RegistryManager *manager, int RRN, VirtualRegistr
 		manager -> o gerenciador de registro que tera' o registro deletado em seu binario
 	Retorno: void
 */
-void registry_manager_delete_current (RegistryManager *manager) {
+static void _delete_current_registry (RegistryManager *manager) {
 	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_delete_current()\n");
+		DP("ERROR: invalid parameter @_delete_current_registry()\n");
 		return;
 	}
-
 	binary_write_int(manager->bin_file, -1);	//escreve o indicador de registro deletado: -1
-	
 	fseek(manager->bin_file, REG_SIZE-sizeof(int), SEEK_CUR); //faz o seek para ir para o final do registro
-
 	manager->currRRN++;
 }
-
-
-/*
-	Deleta um registro em um RRN dado
-	Paramentros:
-		manager -> o gerenciador de registro que tera' um registro deletado em seu binario
-		RRN -> RRN do local onde sera deletado o registro
-	Retorno: void
-*/
-void registry_manager_delete_at (RegistryManager *manager, int RRN) {
-	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_delete_at()\n");
-		return;
-	}
-
-	registry_manager_seek(manager, RRN);		//faz o seek do RRN
-	registry_manager_delete_current(manager);	//deleta o registro
-}
-
-
-/*
-	Verifica se o registro onde o ponteiro esta foi deletado
-	Precisa estar no comeco do registro para ser eficiente
-	Parametros:
-		manager -> o gerenciador de registros que tera' seu registro verificado
-	Retorno:
-		bool.
-		true, caso o registro esteja deletado
-		false, caso contrario 
-*/
-bool registry_manager_is_current_deleted (RegistryManager *manager) {
-	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_is_current_deleted()\n");
-		return false;
-	}
-
-	int N = binary_read_int(manager->bin_file);
-
-	fseek(manager->bin_file, -sizeof(int), SEEK_CUR); //volta para o inicio do registro, para a posicao antes de ler o numero
-	
-	return (N == -1) ? true : false;
-}
-
 
 /*
 	Funcao que pula os bytes de um registro (128 bytes) em uma determinada direcao
@@ -282,36 +294,18 @@ bool registry_manager_is_current_deleted (RegistryManager *manager) {
 				  -> BACK  : pula -128 bytes (expands to -1)
 	Retorno: void
 */
-void registry_manager_jump_registry (RegistryManager *manager, int direction) {
+static void _jump_registry (RegistryManager *manager, int direction) {
 	if (manager == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_jump_registry()\n");
+		DP("ERROR: invalid parameter @_jump_registry()\n");
 		return;
 	}
 
 	fseek(manager->bin_file, REG_SIZE*direction, SEEK_CUR); //faz o seek para de +-128 bytes, pulando um registro pra frente ou pra tras 
-	
 	manager->currRRN += direction;
 }
 
 
-/*
-	Faz o update de um registro em um RRN dado
-	Parametros:
-		manager -> o gerenciador de registros que tera' um registro de seu binario atualizado
-		RRN -> o RRN do registro que sera atualizado
-		reg_data -> registro que contem os valores que serao alterados
-	Retorno:
-		nao ha retorno
-*/
-void registry_manager_update_at(RegistryManager *manager, int RRN, VirtualRegistry *reg_data) {
-	if (manager == NULL || reg_data == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_update_at()\n");
-		return;
-	}
 
-	registry_manager_seek(manager, RRN);
-	registry_manager_update_current(manager, reg_data);
-}
 
 
 /*
@@ -323,12 +317,332 @@ void registry_manager_update_at(RegistryManager *manager, int RRN, VirtualRegist
 	Retorno:
 		nao ha retorno
 */
-void registry_manager_update_current(RegistryManager *manager, VirtualRegistry *new_data) {
+static bool _update_current_registry(RegistryManager *manager, VirtualRegistry *new_data) {
 	if (manager == NULL || new_data == NULL) {
-		DP("ERROR: invalid parameter @registry_manager_update_current()\n");
-		return;
+		DP("ERROR: invalid parameter @_update_current_registry()\n");
+		return false;
 	}
 
 	registry_prepare_for_write(new_data);
-	binary_update_registry(manager->bin_file, new_data);
+	return binary_update_registry(manager->bin_file, new_data) == true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ *  Escreve os headers no arquivo. Essa função deve ser usada o mínimo possível, uma vez
+ *  que escrita a disco é custosa.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que possui os headers e o arquivo binário aberto em modo que permita a escrita
+ *  Retorno: void
+ */
+void registry_manager_write_headers_to_disk(RegistryManager *manager) {
+    //Validação de parâmetros
+    if (manager == NULL) {
+        DP("ERROR: (parameter) invalid null RegistryManager @registry_manager_write_headers_to_disk()\n");
+        return;
+    }
+
+    //Valida o modo, impedindo tentativas de escrita no modo somente leitura
+    if (manager->requested_mode == READ) {
+        DP("ERROR: trying to write headers on a read-only RegistryManager @registry_manager_write_headers_to_disk()\n");
+        return;
+    }
+
+    //Verifica se o manager não está em um estado inválido, isto é, quando o arquivo não está aberto ou os headers não estão definidos
+    if (manager->header == NULL || manager->bin_file == NULL) {
+        DP("ERROR: trying to write headers on a invalid RegistryManager state @registry_manager_write_headers_to_disk()\n");
+        return;
+    }
+
+    //Escreve os headers no arquivo binário
+    reg_header_write_to_bin(manager->header, manager->bin_file);
+}
+
+/**
+ *  Lê os headers do arquivo. Essa função deve ser usada o mínimo possível, uma vez
+ *  que leitura de disco é custosa.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que possui os headers e o arquivo binário aberto
+ *  Retorno: void
+ */
+void registry_manager_read_headers_from_disk(RegistryManager *manager) {
+    //Validação de parâmetros
+    if (manager == NULL) {
+        DP("ERROR: (parameter) invalid null RegistryManager @registry_manager_read_headers_from_disk()\n");
+        return;
+    }
+
+    if (manager->header == NULL || manager->bin_file == NULL) {
+        DP("ERROR: trying to read headers on a invalid RegistryManager state @registry_manager_read_headers_from_disk()\n");
+        return;
+    }
+
+    reg_header_read_from_bin(manager->header, manager->bin_file);
+}
+
+
+
+
+
+/**
+ *  Adiciona um vetor de VirtualRegistries ao fim do arquivo binário
+ *  Dessa forma, menos atualizações são feitas, pois o programa já sabe que
+ *  serão inseridos diversos registros.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que possui o arquivo referido aberto
+ *      VirtualRegistry *reg_arr -> vetor de registros a serem inseridos
+ *      int arr_size -> tamanho do vetor
+ *  Retorno: void
+ */
+void registry_manager_insert_arr_at_end(RegistryManager *manager, VirtualRegistry **reg_arr, int arr_size) {
+    //Valida o estado atual com um manager instanciado e o arquivo aberto
+    if (manager == NULL || manager->bin_file == NULL) {
+        DP("ERROR: invalid RegistryManager state! @registry_manager_insert_at_end\n");
+        return;
+    }
+
+    //O arquivo deve ter sido aberto em um modo que permita a escrita
+    if (manager->requested_mode == READ) {
+        DP("ERROR: RegistryManager is in read-only mode @registry_manager_insert_at_end\n");
+        return;
+    }
+
+    //Posiciona o cursor do arquivo ao fim do arquivo
+    _seek_new_registry(manager);
+
+    //Escreve diversos registros
+    for (int i = 0; i < arr_size; i++) {
+        VirtualRegistry *curr_reg_data = reg_arr[i];
+        _write_current_registry(manager, curr_reg_data);
+    }
+
+    //Atualiza apenas ao fim de toda a operação o próximo RRN
+    reg_header_set_next_RRN(manager->header, reg_header_get_next_RRN(manager->header) + arr_size);
+    reg_header_set_registries_count(manager->header, reg_header_get_registries_count(manager->header) + arr_size);
+}
+
+
+/**
+ *  Adiciona um registro ao fim do arquivo.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que possui o arquivo referido aberto
+ *  Retorno: int - RRN no qual o registro foi inserido
+ */
+int registry_manager_insert_at_end(RegistryManager *manager, VirtualRegistry *reg_data) {
+    //Inserir um registro é apenas um caso especial de inserir um vetor de tamanho 1
+    registry_manager_insert_arr_at_end(manager, &reg_data, 1);
+    return reg_header_get_next_RRN(manager->header) - 1;
+}
+
+
+
+/**
+ *  Busca todos os registros no arquivo que condigam com os termos de busca.
+ *  OBS: os termos de busca são especificados com uma máscara, indicando quais campos
+ *  devem ser comparados e quais são irrelevantes, de acordo com a entrada do usuário.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que tem o arquivo aberto (pode ser modo leitura também)
+ *  Retorno:
+ *      VirtualRegistryArray* -> vetor com todos os registros encontrados de acordo com os termos de busca
+ */
+VirtualRegistryArray *registry_manager_fetch(RegistryManager *manager, VirtualRegistry *search_terms) {
+    //Tenta criar uma lista ligada na qual serão inseridos os registros que condizerem com os termos de busca
+    RegistryLinkedList *list = registry_linked_list_create();
+    if (list == NULL) {
+        DP("ERROR: couldn't create RegistryLinkedList @registry_manager_fetch()\n");
+        return NULL;
+    }
+
+
+    RMForeachCallback innerCallback = ({
+        void _callback(RegistryManager *manager, VirtualRegistry *registry) {
+            //Verifica se, dentro da máscara informada, o registro atual atende aos termos de busca e o adiciona na lista em caso positivo
+            if (virtual_registry_compare(registry, search_terms) == true)
+                registry_linked_list_insert(list, virtual_registry_create_copy(registry));
+        } _callback;
+    });
+
+    registry_manager_for_each(manager, innerCallback);        
+
+    //Converte a lista ligada para uma struct que guarda um vetor e seu tamanho
+    VirtualRegistryArray *reg_data_array = registry_linked_list_to_array(list);
+
+    //Libera a memória da lista ligada, sem apagar os registros, já que estes serão usados no vetor acima criado
+    registry_linked_list_delete(&list, false);
+
+    return reg_data_array;
+}
+
+
+/**
+ *  Obtém um registro dado um RRN.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que possui o arquivo aberto
+ *  Retorno:
+ *      VirtualRegistry* -> Registro encontrado no RRN especificado ou NULL se não encontrado
+ * 
+ */
+VirtualRegistry *registry_manager_fetch_at(RegistryManager *manager, int RRN) {
+    //Validação de parâmetros
+    if (manager == NULL) {
+        DP("ERROR: (parameter) invalid null RegistryManager @registry_manager_fetch_all()\n");
+        return NULL;
+    }
+
+    //Validação do estado do arquivo binário
+    if (manager->bin_file == NULL) {
+        DP("ERROR: RegistryManager haven't opened the binary file @registry_manager_fetch_all()\n");
+        return NULL;
+    } 
+
+    //Indica que o registro é inexistente se o RRN for inexistente
+    if (reg_header_get_next_RRN(manager->header) <= RRN || RRN <= 0) return NULL;
+
+    return _read_registry_at(manager, RRN);
+}
+
+
+/** TODO: arrumar comentário
+ *  Busca todos os registros no arquivo que condigam com os termos de busca.
+ *  OBS: os termos de busca são especificados com uma máscara, indicando quais campos
+ *  devem ser comparados e quais são irrelevantes, de acordo com a entrada do usuário.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que tem o arquivo aberto (pode ser modo leitura também)
+ *  Retorno:
+ *      int -> número de registros encontrados
+ */
+int registry_manager_for_each_match(RegistryManager *manager, VirtualRegistryArray *match_conditions, RMForeachCallback callback_func) {
+    int foundRegistries = 0;
+
+    if (callback_func == NULL) {
+        DP("ERROR: calling registry_manager_for_each_match without callback function\n");
+        return -1;
+    }
+
+    //Validação de parâmetros
+    if (manager == NULL) {
+        DP("ERROR: (parameter) invalid parameter @registry_manager_remove_matches()\n");
+        return -1;
+    }
+
+    //Garante que existem registros para sererm removidos
+    if (registry_manager_is_empty(manager)) return 0;
+
+    //Move o cursor para o primeiro registro
+    _seek_first_registry(manager);
+
+    int reg_count = reg_header_get_registries_count(manager->header) + reg_header_get_removed_count(manager->header);
+    for (int i = 0; i < reg_count; i++) {
+        VirtualRegistry *reg_data = _read_current_registry(manager);
+
+        if (reg_data == NULL) continue;
+
+        //Verifica se o registro atual se encaixa em um dos termos de busca. Se sim, chame o callback
+        if (match_conditions == NULL || virtual_registry_array_contains(match_conditions, reg_data, virtual_registry_compare) == true) {
+            callback_func(manager, reg_data);
+			foundRegistries++;
+        }
+
+        //Libera a memória do registro na RAM
+        virtual_registry_delete(&reg_data);
+    }
+
+	return foundRegistries;
+}
+
+void _DMForeachCallback_remove(RegistryManager *manager, VirtualRegistry *reg) {
+    //Supõe-se que o registro recebido já foi lido e por isso o cursor se encontra um registro além
+    _jump_registry(manager, BACK);
+    _delete_current_registry(manager);
+    reg_header_set_removed_count(manager->header, INCREASE);
+    reg_header_set_registries_count(manager->header, DECREASE);
+}
+
+/**
+ *  Remove registros que se encaixem em um dos termos especificados.
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador que  possui o arquivo aberto
+ *      VirtualRegistryArray *search_terms_array -> vetor de termos de busca
+ *  Retorno: void
+ */
+void registry_manager_remove_matches (RegistryManager *manager, VirtualRegistryArray *match_terms_arr) {
+    registry_manager_for_each_match(manager, match_terms_arr, _DMForeachCallback_remove);
+} 
+
+/**
+ *  Atualiza no disco um registro dado um RRN
+ *  Parâmetros:
+ *      RegistryManager *manager -> gerenciador com o arquivo aberto em modo que permita escrita
+ *      int RRN -> RRN no qual o registro se encontra
+ *      VirtualRegistryUpdater *new_data -> registro com máscara de bits indicando quais campos devem ser atualizados
+ *  Retorno: void 
+ */
+void registry_manager_update_at(RegistryManager *manager, int RRN, VirtualRegistryUpdater *new_data) {
+    //Validação de parâmetros
+    if (manager == NULL || new_data == NULL) {
+        DP("ERROR: (parameter) invalid null parameters @registry_manager_update_at()\n");
+        return;
+    }
+
+    //Validação do estado do arquivo
+    if (manager->bin_file == NULL || manager == NULL) {
+        DP("ERROR: RegistryManager is in an invalid state @registry_manager_update_at()\n");
+        return;
+    }
+
+    if (manager->requested_mode == READ) {
+        DP("ERROR: RegistryManager is in read-only mode @registry_manager_update_at()\n");
+        return;
+    }
+
+    if (reg_header_get_next_RRN(manager->header) <= RRN) return;
+
+    _seek_registry(manager, RRN);
+
+    //TODO: ler a especificação pra saber quando conta como atualizado (se for um removido?, se nada mudar no registro?)
+    if (_update_current_registry(manager, new_data) == true) { //Indica que o registro a ser atualizado não era deletado e não houveram mais erros
+        reg_header_set_updated_count(manager->header, H_INCREASE);
+    }
+}   
+
+void registry_manager_for_each(RegistryManager *manager, RMForeachCallback callback_func) {
+    registry_manager_for_each_match(manager, NULL, callback_func);
+}
+
+bool registry_manager_is_empty(RegistryManager *manager) {
+	if (manager == NULL || manager->bin_file == NULL) {
+		DP("WARNING: trying to check whether a registrymanager that is not opened is empty or not\n");
+		return false;
+	}
+
+    return reg_header_get_registries_count(manager->header) == 0;
+}
+
+RegistryHeader *registry_manager_get_registry_header (RegistryManager *manager) {
+    if (manager == NULL) {
+        return NULL;
+    }
+
+    return manager->header;
 }

@@ -4,8 +4,14 @@
 #include <stdlib.h>
 #include "debug.h"
 
+VirtualRegistryArray *virtual_registry_array_create_unique(VirtualRegistry *registry) {
+    VirtualRegistry **arr = malloc(1 * sizeof(VirtualRegistry*));
+    arr[0] = registry;
+    return virtual_registry_array_create(arr, 1);
+}
+
 /*
-    Funçãoo para criar uma struct que representa um array de registros.
+    Função para criar uma struct que representa um array de registros.
     Permite fácil acesso do tamanho do array informado.
     OBS: não faz cópia dos elementos do array informado, apenas o referencia.
     Parâmetros:
