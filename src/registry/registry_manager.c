@@ -15,7 +15,6 @@
 #define REG_SIZE 128
 
 struct _registry_manager {
-    char *bin_file_name;
     FILE *bin_file;
     OPEN_MODE requested_mode;
     RegistryHeader *header;
@@ -38,7 +37,6 @@ RegistryManager *registry_manager_create(void) {
     }
 
     //Define os valores da struct como os padrões
-    registry_manager->bin_file_name = NULL;
     registry_manager->bin_file = NULL;
     registry_manager->requested_mode = READ;
     registry_manager->header = NULL;
@@ -67,13 +65,10 @@ OPEN_RESULT registry_manager_open(RegistryManager *manager, char* bin_filename, 
         return OPEN_INVALID_ARGUMENT;
     }
 
-	if (manager->bin_file_name != NULL) {
+	if (DEBUG && manager->bin_file != NULL) {
 		DP("WARNING: opening new file before closing file already opened! @registry_manager_open()\n");
 		return OPEN_INVALID_ARGUMENT;
 	}
-
-	//Define o nome do arquivo no manager
-	manager->bin_file_name = strdup(bin_filename);
 
     //Vetor de conversão do enum modo para a string que o representa (READ = rb, CREATE = )
     static char* mode_to_str[] = {"rb", "wb+", "rb+"};
@@ -82,7 +77,7 @@ OPEN_RESULT registry_manager_open(RegistryManager *manager, char* bin_filename, 
     manager->requested_mode = mode;
 
     //Abre o arquivo binário no modo selecionado (ler os modos)
-    manager->bin_file = fopen(manager->bin_file_name, mode_to_str[mode]);
+    manager->bin_file = fopen(bin_filename, mode_to_str[mode]);
 
     //Se houver um erro na abertura do arquivo, retornar o erro por meio de um enum
     if (manager->bin_file == NULL) return OPEN_FAILED; 
@@ -137,10 +132,6 @@ void registry_manager_close(RegistryManager *manager) {
     fclose(manager->bin_file);
 	//Marca qua não existe arquivo aberto
     manager->bin_file = NULL;
-
-    free(manager->bin_file_name);
-	//TODO: ver a possibilidade de tirar esse membro da struct
-	manager->bin_file_name = NULL;
 
 	manager->currRRN = -1;
 }
