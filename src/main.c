@@ -476,9 +476,9 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
 void printint (int a) {printf("%d\n", a);}
 
 //TODO: comment
-void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
+void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     //Validação de parâmetros
-    if (bin_filename == NULL || b_tree_filename == NULL) {
+    if (reg_bin_filename == NULL || b_tree_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade8()\n");
         return;
     }
@@ -492,37 +492,33 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
     }
 
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
-    OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, CREATE);
+    OPEN_RESULT open_result = registry_manager_open(registry_manager, reg_bin_filename, CREATE);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         print_registry_manager_open_result_message(open_result);
         return;
     }
 
-    BTHeader *b_tree_header = b_tree_header_create();
-    if (b_tree_header == NULL) {
-        DP("ERROR: Couldn't allocate memory for 'b_tree_header' @funcionalidade8()\n");
-        registry_manager_free(&registry_manager);
-        return;
-    }
-
-
     //TODO: fclose
-    FILE *b_tree_file = fopen(b_tree_filename, "w+");
-    BTreeManager *b_tree_manager = b_tree_manager_create(b_tree_file, b_tree_header);
+    BTreeManager *b_tree_manager = b_tree_manager_create();
+
     if (b_tree_manager == NULL) {
-        DP("ERROR: Couldn't allocate memory for 'b_tree_manager' @funcionalidade8()\n");
-        registry_manager_free(&registry_manager);
-        b_tree_header_free(&b_tree_header);
+        DP("ERROR: couldn't create BTreeManager @funcionalidade8()\n");
         return;
     }
 
+    open_result = b_tree_manager_open(b_tree_manager, b_tree_filename, CREATE);
 
-    RegistryHeader *header = registry_manager_get_registry_header(registry_manager);
-    int totalRegistries = reg_header_get_registries_count(header);
+    if (open_result != OPEN_OK) {
+        print_registry_manager_open_result_message(open_result);
+        b_tree_manager_free(&b_tree_manager);
+        return;
+    }
+
+    RegistryHeader *reg_header = registry_manager_get_registry_header(registry_manager);
+    int totalRegistries = reg_header_get_registries_count(reg_header);
     int RRN = -1;
     
-
     for (int i = 0; i < totalRegistries; i++) {
         RRN++;
         VirtualRegistry *reg = registry_manager_fetch_at(registry_manager, RRN);
@@ -535,7 +531,6 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
         virtual_registry_delete(&reg);
     }
 
-    b_tree_header_free(&b_tree_header);
     b_tree_manager_free(&b_tree_manager);
     registry_manager_free(&registry_manager);
 

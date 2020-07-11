@@ -39,7 +39,7 @@ struct _b_tree_manager {
 	Retorno:
 		BTreeManager* . O gerenciador de registros.
 */
-BTreeManager *b_tree_manager_create(FILE *bin_file, BTHeader *header) {
+BTreeManager *b_tree_manager_create(void) {
 	//Tenta alocar memória
 	BTreeManager *manager = malloc(sizeof(BTreeManager));
 	if (manager == NULL) {
@@ -48,8 +48,8 @@ BTreeManager *b_tree_manager_create(FILE *bin_file, BTHeader *header) {
 	}
 
 	//Define os valores iniciais
-	manager -> header = header;
-	manager -> bin_file = bin_file;
+	manager -> header = NULL;
+	manager -> bin_file = NULL;
 	manager -> currRRN = -1;
 	return manager;
 }
@@ -211,6 +211,8 @@ void b_tree_manager_free(BTreeManager **manager_ptr) {
 
 	//Já foi liberado
 	if (manager == NULL) return;
+
+	b_tree_manager_close(manager);
 
 	//TODO: falta fclose
 	//Redefine os valores ao padrão inicial
