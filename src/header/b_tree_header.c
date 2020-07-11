@@ -59,10 +59,10 @@ BTHeader *b_tree_header_create(void) {
  *      BTHeader **header_ptr -> referência à variável que guarda o pointer para o TAD
  *  Retorno: void
  */
-void b_tree_header_delete(BTHeader **header_ptr) {
+void b_tree_header_free(BTHeader **header_ptr) {
     //Validação de parâmetros
     if (header_ptr == NULL) {
-        DP("ERROR: (parameter) invalid null pointer @b_tree_header_delete()\n");
+        DP("ERROR: (parameter) invalid null pointer @b_tree_header_free()\n");
         return;
     }
 

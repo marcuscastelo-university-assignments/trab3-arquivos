@@ -1,3 +1,5 @@
+#include "registry_manager.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +10,6 @@
 #include "registry_utils.h"
 #include "registry.h"
 #include "string_utils.h"
-#include "registry_manager.h"
 #include "debug.h"
 #include "registry_linked_list.h"
 
@@ -100,9 +101,7 @@ OPEN_RESULT registry_manager_open(RegistryManager *manager, char* bin_filename, 
         }
 		
 
-		//TODO: parar de usar OPEN_EMPTY
-		else if (mode == READ) //Se o modo for somente leitura e o arquivo estiver vazio, retorne erro
-			if (reg_header_get_registries_count(manager->header) == 0) return OPEN_EMPTY;
+		//TODO: checar se tirar o OPEN_EMPTY deu ruim
     }
     
     return OPEN_OK;
@@ -566,8 +565,8 @@ void _DMForeachCallback_remove(RegistryManager *manager, VirtualRegistry *reg) {
     //Supõe-se que o registro recebido já foi lido e por isso o cursor se encontra um registro além
     _jump_registry(manager, BACK);
     _delete_current_registry(manager);
-    reg_header_set_removed_count(manager->header, INCREASE);
-    reg_header_set_registries_count(manager->header, DECREASE);
+    reg_header_set_removed_count(manager->header, H_INCREASE);
+    reg_header_set_registries_count(manager->header, H_DECREASE);
 }
 
 /**

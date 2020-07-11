@@ -45,8 +45,7 @@ typedef struct _Funcionalidade6ExtensionInfo
  */
 void print_registry_manager_open_result_message(OPEN_RESULT open_result) {
     if (open_result & (OPEN_FAILED | OPEN_INCONSISTENT)) printf("Falha no processamento do arquivo.\n");
-    else if (open_result & OPEN_EMPTY) printf("Registro Inexistente.\n"); //(obs: ignorando especificação do trabalho 1, que usa 'i' minúsculo. Supondo ser um erro de digitação)
-    else if (open_result & OPEN_INVALID_ARGUMENT) printf("ERRO: Um argumento inválido foi informado\n");
+    else if (open_result & OPEN_INVALID_ARGUMENT) DP("ERRO: Um argumento inválido foi informado\n");
 }
 
 /**
@@ -235,6 +234,8 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
         print_registry_manager_open_result_message(open_result);
         return;
     }
+
+    if (registry_manager_is_empty(registry_manager)) printf("Registro Inexistente.\n");
 
     //pega o registro no RRN dado
     VirtualRegistry *reg_data = registry_manager_fetch_at(registry_manager, RRN);
@@ -512,7 +513,7 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
     if (b_tree_manager == NULL) {
         DP("ERROR: Couldn't allocate memory for 'b_tree_manager' @funcionalidade8()\n");
         registry_manager_free(&registry_manager);
-        b_tree_header_delete(&b_tree_header);
+        b_tree_header_free(&b_tree_header);
         return;
     }
 
@@ -534,8 +535,8 @@ void funcionalidade8 (char *bin_filename, char *b_tree_filename) {
         virtual_registry_delete(&reg);
     }
 
-    b_tree_header_delete(&b_tree_header);
-    b_tree_manager_delete(&b_tree_manager);
+    b_tree_header_free(&b_tree_header);
+    b_tree_manager_free(&b_tree_manager);
     registry_manager_free(&registry_manager);
 
     binarioNaTela(b_tree_filename);
