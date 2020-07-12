@@ -5,6 +5,8 @@
 #include "registry_utils.h"
 #include "string_utils.h"
 
+#include "debug.h"
+
 #define INF 1e9+5
 #define GARBAGE_CHAR '$'
 
@@ -77,8 +79,11 @@ char binary_read_char(FILE *file) {
     if (file == NULL)
         return '$';
 
-    char c;
-    fread(&c, sizeof(char), 1, file);
+    char c = '\0';
+    if (fread(&c, sizeof(char), 1, file) <= 0){
+        //TODO: ver se mantém ou tira essa mensagem
+        DP("ERROR: fread failed, probably opened in read-only mode\n");
+    }
 
     return c;
 }

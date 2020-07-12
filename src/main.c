@@ -630,16 +630,19 @@ void funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
     }
 
     OPEN_RESULT o_res;
-    o_res = b_tree_manager_open(btman, b_tree_filename, READ);
+    o_res = b_tree_manager_open(btman, b_tree_filename, MODIFY);
     if (o_res != OPEN_OK) {
         _print_open_result_message(o_res);
         b_tree_manager_free(&btman);
+        return;
     }
 
     //Informações que são passadas para um callback da funcionalidade 6, que chama a funcionalidade10callback a cada inserção
     Funcionalidade6ExtensionInfo extensionInfo;
     extensionInfo.btman = btman;
     extensionInfo.callback = funcionalidade10callback;
+    extensionInfo.idNascimento = -1;
+    extensionInfo.RRN = -1;
     funcionalidade6(reg_filename, n_str, &extensionInfo);
     b_tree_manager_free(&btman);
 

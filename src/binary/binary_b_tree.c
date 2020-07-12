@@ -1,6 +1,8 @@
 #include "binary_b_tree.h"
 #include "binary_io.h"
 
+#include "debug.h"
+
 BTreeNode *binary_read_b_tree_node (FILE *file_ptr) {
     if (file_ptr == NULL)
         return NULL;
@@ -29,8 +31,10 @@ BTreeNode *binary_read_b_tree_node (FILE *file_ptr) {
 }
 
 void binary_write_b_tree_node (FILE *file_ptr, BTreeNode *node) {
-    if (file_ptr == NULL || node == NULL)
+    if (file_ptr == NULL || node == NULL) {
+        DP("ERROR: invalid parameters @binary_write_b_tree_node()");
         return;
+    }
 
     binary_write_int(file_ptr, b_tree_node_get_nivel(node));
     binary_write_int(file_ptr, b_tree_node_get_n(node));

@@ -430,13 +430,13 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int idNascime
 /*
 
 */
-void b_tree_manager_insert(BTreeManager *manager, int idNascimento, int RRN) {
+void b_tree_manager_insert(BTreeManager *manager, int regIdNascimento, int regRRN) {
 	if (manager == NULL) {
 		return;
 	}
 
 	int nodeRRN = b_tree_header_get_noRaiz(manager->header);
-	insert_answer ans = recursive_insert(manager, nodeRRN, idNascimento, RRN);
+	insert_answer ans = recursive_insert(manager, nodeRRN, regIdNascimento, regRRN);
 
 	if (ans.key != -1) {
 		int nextRRN = b_tree_header_get_proxRRN(manager->header);
