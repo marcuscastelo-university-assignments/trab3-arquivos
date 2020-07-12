@@ -527,7 +527,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
             i--;
             continue;
         }
-
+        // printf("\n/////////////////////\n");
         b_tree_manager_insert(b_tree_manager, reg->idNascimento, RRN);
         virtual_registry_free(&reg);
     }

@@ -54,6 +54,9 @@ int b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
     if (node == NULL)
         return -1;
     
+    if (C == -1)
+        return -1;
+
     if (node->n == B_TREE_ORDER-1)
         return -1;
 
