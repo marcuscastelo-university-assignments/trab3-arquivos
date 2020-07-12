@@ -60,6 +60,10 @@ int b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
     if (node->n == B_TREE_ORDER-1)
         return -1;
 
+    // DP("\nC: %dPr: %d\n", C, Pr);
+    // b_tree_node_print(node);
+    // DP("\n");
+
     int pos;
 
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
@@ -83,6 +87,7 @@ int b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
         }
     }
 
+    // b_tree_node_print(node);
     node->n++;
 
     return pos;
@@ -240,6 +245,7 @@ int b_tree_node_get_RRN_that_fits (BTreeNode *node, int key) {
 
         else if (key == C) {
             nodeRRN = -2;
+            enteredBeforeNodeEnd = true;
             break;
         }  
     }
@@ -320,7 +326,7 @@ BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P)
         b_tree_node_sorted_insert_item(new, newC[i], newPr[i]);
     }
 
-    //setting P in new
+    //setting P in old
     for (int i = 0; i < B_TREE_ORDER/2+1; i++) {
         b_tree_node_set_P(parent, newP[i], i);
     }
@@ -328,9 +334,10 @@ BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P)
         b_tree_node_set_P(parent, -1, i);
     }
     
-    //setting P in old
-    for (int i = B_TREE_ORDER/2+1; i < B_TREE_ORDER+1; i++) {
-        b_tree_node_insert_P(new, newP[i], 0);
+    //setting P in new
+    int start = B_TREE_ORDER/2+1;
+    for (int i = start; i < B_TREE_ORDER+1; i++) {
+        b_tree_node_set_P(new, newP[i], i-start);
     }
 
     free(newC);
@@ -348,16 +355,17 @@ void b_tree_node_print (BTreeNode *node) {
 
     printf("Nivel: %d\n", b_tree_node_get_nivel(node));
     printf("N: %d\n", b_tree_node_get_n(node));
-    printf("C:");
+    printf("C:  ");
     for (int i = 0; i < B_TREE_ORDER-1; i++)
         printf("%d ", b_tree_node_get_C(node, i));
     printf("\nPr: ");
     for (int i = 0; i < B_TREE_ORDER-1; i++)
         printf("%d ", b_tree_node_get_Pr(node, i));
-    printf("\nP: ");
+    printf("\nP:  ");
     for (int i = 0; i < B_TREE_ORDER; i++)
         printf("%d ", b_tree_node_get_P(node, i));
     printf("\n");
 
     return;
 }
+

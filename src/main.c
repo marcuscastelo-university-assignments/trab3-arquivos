@@ -25,6 +25,7 @@
 #include "string_utils.h"
 #include "bool.h"
 #include "debug.h"
+#include "pair.h"
 
 typedef struct _Funcionalidade6ExtensionInfo
 {
@@ -581,10 +582,10 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
         if (DEBUG) return;
     }
 
-    int REG_RRN = b_tree_manager_search_for(btman, idNascimento);
+    pairIntInt p = b_tree_manager_search_for(btman, idNascimento);
 
     //Se não for encontrado
-    if (REG_RRN == -1) {
+    if (p.first == -1) {
         printf("Registro inexistente.\n");
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
@@ -599,7 +600,7 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
         return;
     }
 
-    VirtualRegistry *registry = registry_manager_fetch_at(regman, REG_RRN);
+    VirtualRegistry *registry = registry_manager_fetch_at(regman, p.first);
 
     //Caso de ter sido deletado (ou RRN inválido)
     if (registry == NULL) {
@@ -610,11 +611,8 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
 
     //Exibe o registro
     virtual_registry_print(registry);
+    printf("Quantidade de paginas da arvore-B acessadas: %d\n", p.second);
     virtual_registry_free(&registry);    
-
-    //TODO: mostrar a quantidade de páginas de disco que foram acessadas : LUCAS
-
-    //TODO: ver se faltou algo
 
 }
 
@@ -700,19 +698,34 @@ void free_params(char ***params_ptr, int quantity) {
     #undef params
 }
 
-void teste () {
+void teste (char *btree_filename) {
+    BTreeManager *man = b_tree_manager_create();
+    b_tree_manager_open(man, btree_filename, READ);
+    BTHeader *header = get_header(man);
+    
+    int n = b_tree_header_get_proxRRN(header);
+
+    for (int i = 0; i < n; i++) {
+        BTreeNode *node = _read_node_at(man, i);
+        printf("RRN: %d\n", i);
+        b_tree_node_print(node);
+        printf("\n");
+    }
+}
+
+void teste2 () {
     BTreeNode *node = b_tree_node_create(1);
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
         b_tree_node_sorted_insert_item(node, i*2, i);
-        b_tree_node_insert_P(node, i, 0);
+        b_tree_node_set_P(node, i*3, i);
     }
-    b_tree_node_insert_P(node, 10, B_TREE_ORDER-1);
     b_tree_node_print(node);
     printf("\n");
-    BTreeNode *new = b_tree_node_split_one_to_two(node, 3, 9, 20);
-    b_tree_node_print(node);
-    printf("\n");
-    b_tree_node_print(new);
+
+    int tmp;
+    scanf("%d", &tmp);
+
+    printf("%d\n", b_tree_node_get_RRN_that_fits(node, tmp));
 }
 /**
  *  Função principal: responsável por guiar o fluxo do programa separado por funcionalidades
@@ -795,8 +808,13 @@ int main(void) {
             free_params(&params, 3);
             break;
         case 0:
-            teste();
+            params = init_params(1);
+            teste(params[0]);
+            free_params(&params, 1);
             break;
+        // case 0:
+        //     teste2();
+        //     break;
 
         default:
             printf("Funcionalidade %c não implementada.\n", funcionalidade_code);

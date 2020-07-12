@@ -271,13 +271,13 @@ BTreeNode *_b_tree_manager_read_current(BTreeManager *manager) {
 	Retorno:
 		BTreeNode* -> O registro lido. NULL caso o registro tenha sido removido
 */
-static BTreeNode *_read_node_at(BTreeManager *manager, int RRN) {
+BTreeNode *_read_node_at(BTreeManager *manager, int RRN) {
 	if (manager == NULL) {
 		print_error("ERROR: invalid parameter @_read_node_at()\n");
 		return NULL;
 	}
 	
-	_b_tree_manager_seek(manager, RRN);			//faz o seek do RRN
+	_b_tree_manager_seek(manager, RRN);				//faz o seek do RRN
 	return _b_tree_manager_read_current(manager);	//le o registro e retorna
 }
 
@@ -321,18 +321,18 @@ static void _write_node_at(BTreeManager *manager, int RRN, BTreeNode *node) {
 /*
 
 */
-insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int idNascimento, int RRN) {
+insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int value) {
 	if (nodeRRN == -1) {
 		insert_answer ans;
-		ans.key = idNascimento;
-		ans.value = RRN;
+		ans.key = key;
+		ans.value = value;
 		ans.RRN = -1;
 		return ans;
 	}
 
 	BTreeNode *node = _read_node_at(manager, nodeRRN);
 	int n = b_tree_node_get_n(node);
-	int nextRRN = b_tree_node_get_RRN_that_fits(node, idNascimento);
+	int nextRRN = b_tree_node_get_RRN_that_fits(node, key);
 	insert_answer ans;
 
 	if (nextRRN == -2) {
@@ -342,18 +342,20 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int idNascime
 		return ans;
 	} 
 
-	ans = recursive_insert(manager, nextRRN, idNascimento, RRN);
+	ans = recursive_insert(manager, nextRRN, key, value);
 	// printf("ans.key: %d\n", ans.key);
 
 	if (ans.key != -1) {
 		if (n < B_TREE_ORDER-1) {
-			// DP("alow entrei aqui\n");
-			b_tree_node_sorted_insert_item(node, idNascimento, RRN);
+			// printf("alow entrei aqui\n");
+			int pos = b_tree_node_sorted_insert_item(node, ans.key, ans.value);
+			b_tree_node_insert_P(node, ans.RRN, pos+1);
 			ans.key = -1;
 			ans.value = -1;
 			ans.RRN = -1;
 		}
 		else {
+			// printf("fudeu dei split\n");
 			BTreeNode *new = b_tree_node_split_one_to_two(node, ans.key, ans.value, ans.RRN);
 			ans.key = b_tree_node_get_C(new, 0);
 			ans.value = b_tree_node_get_Pr(new, 0);
@@ -364,11 +366,11 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int idNascime
 			_write_node_at(manager, ans.RRN, new);
 
 			b_tree_header_set_proxRRN(manager->header, H_INCREASE);
-			b_tree_header_set_nroChaves(manager->header, H_INCREASE);
 
 			b_tree_node_free(new);
 		}
-		
+		// b_tree_node_print(node);
+		// printf("\n");
 		_write_node_at(manager, nodeRRN, node);
 	}
 
@@ -392,7 +394,6 @@ void b_tree_manager_insert(BTreeManager *manager, int regIdNascimento, int regRR
 	if (ans.key != -1) {
 		int nextRRN = b_tree_header_get_proxRRN(manager->header);
 		b_tree_header_set_noRaiz(manager->header, nextRRN);
-		b_tree_header_set_nroChaves(manager->header, H_INCREASE);
 		b_tree_header_set_nroNiveis(manager->header, H_INCREASE);
 		b_tree_header_set_proxRRN(manager->header, H_INCREASE);
 
@@ -405,36 +406,44 @@ void b_tree_manager_insert(BTreeManager *manager, int regIdNascimento, int regRR
 		b_tree_node_free(new);
 	}
 
+	b_tree_header_set_nroChaves(manager->header, H_INCREASE);
+
 	return;
 }
 
 /*
 
 */
-int b_tree_manager_search_for (BTreeManager *manager, int idNascimento) {
+pairIntInt b_tree_manager_search_for (BTreeManager *manager, int key) {
+	pairIntInt p;
 	if (manager == NULL) {
-		return -1;
+		p.first = -1;
+		p.second = -1;
+		return p;
 	}
 
+	p.second = 0;
 	BTreeNode *node;
 	int nodeRRN = b_tree_header_get_noRaiz(manager->header);
 
 	while (nodeRRN != -1) {
 		node = _read_node_at(manager, nodeRRN);
+		p.second++;
 		if (node == NULL)
 			break;
 		//i = 0, 1, 2, 3,  4
 		//C = 2, 4, 7, 8, 10
 		//Pr= 1, 2, 3, 4,  5, 6
 
-		nodeRRN = b_tree_node_get_RRN_that_fits(node, idNascimento);
+		nodeRRN = b_tree_node_get_RRN_that_fits(node, key);
 
 		if (nodeRRN == -2) {
 			for (int i = 0; i < B_TREE_ORDER; i++) {
-				if (b_tree_node_get_C(node, i) == idNascimento) {
+				if (b_tree_node_get_C(node, i) == key) {
 					int ans = b_tree_node_get_Pr(node, i);
 					b_tree_node_free(node);
-					return ans;
+					p.first = ans;
+					return p;
 				}
 			}
 		}
@@ -442,5 +451,10 @@ int b_tree_manager_search_for (BTreeManager *manager, int idNascimento) {
 		b_tree_node_free(node);
 	}
 
-	return -1;
+	p.first = -1;
+	return p;
+}
+
+BTHeader *get_header(BTreeManager *man) {
+	return man->header;
 }

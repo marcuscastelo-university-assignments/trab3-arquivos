@@ -8,7 +8,7 @@ BTreeNode *binary_read_b_tree_node (FILE *file_ptr) {
         return NULL;
 
     int nivel = binary_read_int(file_ptr);
-    // int n = binary_read_int(file_ptr); TODO: dar uso lucas
+    binary_read_int(file_ptr);
     int C, Pr, P;
 
     BTreeNode *node = b_tree_node_create(nivel);

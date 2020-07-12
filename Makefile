@@ -22,10 +22,10 @@ zip:
 	@ zip -r trab3.zip src headers Makefile
 
 deb: all
-	./prog < 1.in > 1.out
+	./prog < 1.in &> 1.out
 	code 1.out
 
 deb_hex: all
-	./prog < 1.in > 1.out
+	./prog < 1.in &> 1.out
 	hexdump -vC 1.out > 1.hexdump
 	code 1.hexdump
