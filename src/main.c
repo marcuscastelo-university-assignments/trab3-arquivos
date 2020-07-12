@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <signal.h>
 
@@ -551,7 +552,7 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
         return;
     }
 
-    BTreeManager *btman = b_tree_header_create();
+    BTreeManager *btman = b_tree_manager_create();
     if (btman == NULL) {
         DP("ERROR: couldn't allocate memory for BTreeManager\n");
         return;
@@ -617,7 +618,7 @@ void funcionalidade10callback (Funcionalidade6ExtensionInfo *info) {
 }
 
 void funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
-    BTreeManager *btman = b_tree_header_create();
+    BTreeManager *btman = b_tree_manager_create();
     if (btman == NULL) {
         DP("ERROR: couldn't allocate memory for BTreeManager\n");
         return;

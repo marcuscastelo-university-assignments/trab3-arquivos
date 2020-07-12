@@ -182,7 +182,7 @@ bool binary_update_registry(FILE *file, VirtualRegistryUpdater *updated_reg) {
     if (shouldFseek) fseek(file, registry_seek_start + REGISTRY_SIZE, SEEK_SET);
 
     //Libera a memória do registro anterior
-    virtual_registry_delete(&old_reg);
+    virtual_registry_free(&old_reg);
 
     return true;
 }

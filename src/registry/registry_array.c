@@ -60,7 +60,7 @@ void virtual_registry_array_delete(VirtualRegistryArray **array_ptr) {
     }
 
     for (int i = 0; i < array->size; i++)
-        virtual_registry_delete(&array->data_arr[i]);
+        virtual_registry_free(&array->data_arr[i]);
     
     free(array->data_arr);
     array->data_arr = NULL;
