@@ -30,6 +30,4 @@ void b_tree_node_update_n (BTreeNode *node);
 
 BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P);
 
-void b_tree_node_print (BTreeNode *node);
-
 #endif  //!__B_TREE_NODE__H__

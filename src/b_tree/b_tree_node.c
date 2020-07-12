@@ -257,13 +257,6 @@ int b_tree_node_get_RRN_that_fits (BTreeNode *node, int key) {
     return nodeRRN;
 }
 
-void print_vec (char *name, int *vec, int size) {
-    printf("%s: ", name);
-    for (int i = 0; i < size; i++)
-        printf("%d ", vec[i]);
-    printf("\n");
-}
-
 int insertion_sort_insert_in_array (int *arr, int size, int value) {
     for (int i = 0; i < size-1; i++) {
         if (value < arr[i]) {
@@ -346,26 +339,3 @@ BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P)
 
     return new; 
 }
-
-void b_tree_node_print (BTreeNode *node) {
-    if (node == NULL) {
-        printf("No node to print\n");
-        return;
-    }
-
-    printf("Nivel: %d\n", b_tree_node_get_nivel(node));
-    printf("N: %d\n", b_tree_node_get_n(node));
-    printf("C:  ");
-    for (int i = 0; i < B_TREE_ORDER-1; i++)
-        printf("%d ", b_tree_node_get_C(node, i));
-    printf("\nPr: ");
-    for (int i = 0; i < B_TREE_ORDER-1; i++)
-        printf("%d ", b_tree_node_get_Pr(node, i));
-    printf("\nP:  ");
-    for (int i = 0; i < B_TREE_ORDER; i++)
-        printf("%d ", b_tree_node_get_P(node, i));
-    printf("\n");
-
-    return;
-}
-

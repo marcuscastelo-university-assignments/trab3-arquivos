@@ -342,11 +342,9 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int 
 	} 
 
 	ans = recursive_insert(manager, nextRRN, key, value);
-	// printf("ans.key: %d\n", ans.key);
 
 	if (ans.key != -1) {
 		if (n < B_TREE_ORDER-1) {
-			// printf("alow entrei aqui\n");
 			int pos = b_tree_node_sorted_insert_item(node, ans.key, ans.value);
 			b_tree_node_insert_P(node, ans.RRN, pos+1);
 			ans.key = -1;
@@ -354,7 +352,6 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int 
 			ans.RRN = -1;
 		}
 		else {
-			// printf("fudeu dei split\n");
 			BTreeNode *new = b_tree_node_split_one_to_two(node, ans.key, ans.value, ans.RRN);
 			ans.key = b_tree_node_get_C(new, 0);
 			ans.value = b_tree_node_get_Pr(new, 0);
@@ -368,8 +365,6 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int 
 
 			b_tree_node_free(new);
 		}
-		// b_tree_node_print(node);
-		// printf("\n");
 		_write_node_at(manager, nodeRRN, node);
 	}
 
@@ -387,7 +382,6 @@ void b_tree_manager_insert(BTreeManager *manager, int regIdNascimento, int regRR
 	}
 
 	int nodeRRN = b_tree_header_get_noRaiz(manager->header);
-	// printf("nodeRRN: %d\n", nodeRRN);
 	insert_answer ans = recursive_insert(manager, nodeRRN, regIdNascimento, regRRN);
 
 	if (ans.key != -1) {

@@ -700,35 +700,6 @@ void free_params(char ***params_ptr, int quantity) {
     #undef params
 }
 
-void teste (char *btree_filename) {
-    BTreeManager *man = b_tree_manager_create();
-    b_tree_manager_open(man, btree_filename, READ);
-    BTreeHeader *header = get_header(man);
-    
-    int n = b_tree_header_get_proxRRN(header);
-
-    for (int i = 0; i < n; i++) {
-        BTreeNode *node = _read_node_at(man, i);
-        printf("RRN: %d\n", i);
-        b_tree_node_print(node);
-        printf("\n");
-    }
-}
-
-void teste2 () {
-    BTreeNode *node = b_tree_node_create(1);
-    for (int i = 0; i < B_TREE_ORDER-1; i++) {
-        b_tree_node_sorted_insert_item(node, i*2, i);
-        b_tree_node_set_P(node, i*3, i);
-    }
-    b_tree_node_print(node);
-    printf("\n");
-
-    int tmp;
-    scanf("%d", &tmp);
-
-    printf("%d\n", b_tree_node_get_RRN_that_fits(node, tmp));
-}
 /**
  *  Função principal: responsável por guiar o fluxo do programa separado por funcionalidades
  *  Lê um caractere representando a funcionalidade. Depois, lê n parâmetros e passa eles para a funcionalidade especificada
