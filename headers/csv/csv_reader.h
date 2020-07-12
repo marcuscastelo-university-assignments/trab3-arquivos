@@ -3,9 +3,14 @@
 
 #include "registry.h"
 #include "registry_array.h"
+#include "open_mode.h"
 
-typedef struct csv_reader CsvReader;
+typedef struct csv_reader_ CsvReader;
 
-VirtualRegistryArray *csv_read_all_lines(const char *file_name);
+CsvReader *csv_reader_create();
+OPEN_RESULT csv_reader_open(CsvReader *reader, char *csv_filename);
+VirtualRegistry *csv_reader_readline(CsvReader *reader);
+void csv_reader_close(CsvReader *reader);
+void csv_reader_free(CsvReader **reader_ptr);
 
 #endif  //!__CSV_READER__H__

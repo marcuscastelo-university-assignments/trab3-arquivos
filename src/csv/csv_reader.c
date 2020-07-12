@@ -7,7 +7,39 @@
 
 #include "registry_linked_list.h"
 #include "string_utils.h"
+
 #include "debug.h"
+
+typedef struct csv_reader_ CsvReader;
+
+struct csv_reader_ {
+    FILE *csv_file;
+};
+
+CsvReader *csv_reader_create() {
+    CsvReader *reader = malloc(sizeof(CsvReader));
+    reader -> csv_file = NULL;
+    return reader;
+}
+
+OPEN_RESULT csv_reader_open(CsvReader *reader, char *csv_filename) {
+    if (csv_filename == NULL) {
+        DP("ERROR: (parameter) invalid null file name @csv_read_all_lines!\n");
+        return OPEN_INVALID_ARGUMENT;
+    }
+    
+    reader->csv_file = fopen(csv_filename, "r");
+    //Nenhuma mensagem de erro é exibida pois o run.codes não aceitaria
+    if (reader->csv_file == NULL) {
+        DP("ERROR: unable to open csv file @csv_reader_open()");
+        return OPEN_FAILED;
+    }
+
+    //Ignora os headers (primeira linha)
+    fscanf(reader->csv_file, "%*[^\n]\n");
+
+    return OPEN_OK;
+}
 
 /**
  *  Lê uma linha completa do CSV
@@ -17,93 +49,91 @@
  *  Retorno:
  *      VirtualRegistry* -> pointer para struct com informações lidas do registro
  */
-VirtualRegistry *csv_read_line(FILE *file_stream) {
-    
+VirtualRegistry *csv_reader_readline(CsvReader *reader) {
     //Buffer para leitura com fgets
-    char buf[1025];
+    static char buf[1025];
 
     //Se EOF, retorna NULL para enviar a mensagem para quem estiver usando esta função
-    if (fgets(buf, 1024, file_stream) == NULL) return NULL;
-
+    if (fgets(buf, 1024, reader->csv_file) == NULL) return NULL;
 
     //Inicializa o registro com valores padrões
-    VirtualRegistry *reg_data = virtual_registry_create();
-
+    VirtualRegistry *registry = virtual_registry_create();
 
     //OBS: strdups são necessários pois o token retornado aponta para uma região do buffer, que é estático (ou seja, vai ser liberado ao fim da função)
-    reg_data->cidadeMae = strdup(_csv_registry_token(buf));
-    reg_data->cidadeBebe = strdup(_csv_registry_token(NULL));
-    
+    registry->cidadeMae = strdup(_csv_registry_token(buf));
+    registry->cidadeBebe = strdup(_csv_registry_token(NULL));
 
     //Variável para armazenamento temporário do token (necessária devido às checagens de string vazia abaixo)
     char *token = _csv_registry_token(NULL);
 
     //Se a idade não for informada ou for 0, mantenha o valor padrão (-1)
     if (!is_string_empty(token)) 
-        reg_data->idNascimento = atoi(token);
+        registry->idNascimento = atoi(token);
 
     //Se a idade não for informada ou for 0, mantenha o valor padrão (-1)
     token = _csv_registry_token(NULL);
     if (!is_string_empty(token) && strcmp(token, "0") != 0)
-        reg_data->idadeMae = atoi(token);
-    if (reg_data->idadeMae == 0)
-        reg_data->idadeMae = -1;
+        registry->idadeMae = atoi(token);
+    if (registry->idadeMae == 0)
+        registry->idadeMae = -1;
 
-    reg_data->dataNascimento = strdup(_csv_registry_token(NULL));
+    registry->dataNascimento = strdup(_csv_registry_token(NULL));
 
     //Se sexo não for informado ou se for um valor inválido, mantenha o valor 0 (ignorado)
     token = _csv_registry_token(NULL);
     if (!is_string_empty(token) && strlen(token) == 1) {
         //Evitar valores indesejados (valores diferentes de 0, 1 e 2)
         if (token[0] == '1' || token[0] == '2')
-            reg_data->sexoBebe = token[0];
+            registry->sexoBebe = token[0];
     }
 
-    reg_data->estadoMae = strdup(_csv_registry_token(NULL));
-    reg_data->estadoBebe = strdup(_csv_registry_token(NULL));
+    registry->estadoMae = strdup(_csv_registry_token(NULL));
+    registry->estadoBebe = strdup(_csv_registry_token(NULL));
 
-    return reg_data;
+    return registry;
 }
 
 /**
- *  Lê todas as linhas do csv, salvando cada uma em um VirtualRegistry. Em sequência, salva estes na struct CsvData e a retorna.
+ *  Fecha o arquivo csv.
  *  Parâmetros:
- *      const char *file_name -> nome do arquivo csv a ser lido
- *  Retorno:
- *      CsvData* -> pointer para a struct que carrega os registros lidos
+ *      CsvReader *reader -> gerenciador que possui o arquivo aberto
+ *  Retorno: void
  */
-VirtualRegistryArray *csv_read_all_lines(const char *file_name) {
-    //1. Tenta abrir o arquivo csv
-    if (file_name == NULL) {
-        DP("ERROR: (parameter) invalid null file name @csv_read_all_lines!\n");
-        return NULL;
-    }
-    
-    FILE *csv_file = fopen(file_name, "r");
-    //Nenhuma mensagem de erro é exibida pois o run.codes não aceitaria
-    if (csv_file == NULL) return NULL;
+void csv_reader_close(CsvReader *reader) {
+    //Verifica se o reader já foi deletado ou se o arquivo já foi fechado
+    if (reader == NULL || reader->csv_file == NULL) return;
 
-    VirtualRegistry *dummy_headers;
-    //Tenta ler os header, a fim de ignorá-los. Se não conseguir, o arquivo estava vazio (EOF encontrado).
-    if ((dummy_headers = csv_read_line(csv_file)) == NULL) {
-        fclose(csv_file);
-        return virtual_registry_array_create(NULL, 0); //Retorna um vetor alocado, porém sem registros
-    } else virtual_registry_free(&dummy_headers);
+    //fecha o arquivo
+    fclose(reader->csv_file);
 
-    //2. Salva todos os registros em uma lista ligada
-    RegistryLinkedList *list = registry_linked_list_create();
-    
-    //Lê o csv, linha a linha, salvando os dados em uma lista ligada, até encontrar EOF (igual a NULL).
-    VirtualRegistry *curr_virtual_registry;
-    while ((curr_virtual_registry = csv_read_line(csv_file)) != NULL)
-        registry_linked_list_insert(list, curr_virtual_registry);
+	//Marca qua não existe arquivo aberto
+    reader->csv_file = NULL;
+}
 
-    fclose(csv_file);
+/*
+	Funcao que desaloca a memoria de um leitor de registros e fecha a stream se ainda estiver aberta. 
+	Parametros:
+		reader_ptr -> o endereco do leitor de registros
+	Retorno:
+		nao ha retorno 
+*/
+void csv_reader_free(CsvReader **reader_ptr) {
+	//Validação de parâmetros
+	if (reader_ptr == NULL) {
+		DP("ERROR: invalid parameter @csv_reader_free()\n");
+		return;
+	}
+	#define reader (*reader_ptr)
 
-    //3. Transforma a lista ligada em um vetor simples por simplicidade
-    VirtualRegistryArray *registries = registry_linked_list_to_array(list);
+	//Já foi liberado
+	if (reader == NULL) return;
 
-    //Libera o espaço da lista ligada, que não será mais utilizada
-    registry_linked_list_delete(&list, false);
-    return registries;
+	csv_reader_close(reader);
+
+	//TODO: falta fclose
+	//Redefine os valores ao padrão inicial
+	reader -> csv_file = NULL;
+	free(reader);
+	reader = NULL;
+	#undef reader
 }

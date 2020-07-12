@@ -67,44 +67,43 @@ static bool funcionalidade1(char *csv_filename, char *bin_filename) {
     
     //Cria um RegistryManager para fazer o gerenciamento dos dados, ler especificação do TAD
     RegistryManager *registry_manager = registry_manager_create();
-
     if (registry_manager == NULL) {
         DP("ERROR: couldn't create RegistryManager @funcionalidade1()\n");
         return false;
     }
 
-    //TODO: csv ler e ir salvando
-    //Lê o csv e coloca os dados em uma estrutura de dados
-    VirtualRegistryArray *registries = csv_read_all_lines(csv_filename);
-    
-    if (registries == NULL) {
+    OPEN_RESULT o_res = registry_manager_open(registry_manager, bin_filename, CREATE);
+    if (o_res != OPEN_OK) {
+        registry_manager_free(&registry_manager);
+        _print_open_result_message(o_res);
+        return false;
+    }
+
+    CsvReader *csv_reader = csv_reader_create();
+    if (registry_manager == NULL) {
+        DP("ERROR: couldn't create CsvReader @funcionalidade1()\n");
+        return false;
+    }
+     
+    o_res = csv_reader_open(csv_reader, csv_filename);
+
+    //Se o arquivo não possuir headers ou não possuir nenhum registro
+    if (o_res != OPEN_OK) {
+        registry_manager_free(&registry_manager);
+        csv_reader_free(&csv_reader);
         printf("Falha no carregamento do arquivo.\n");
         return false;
     }
-
-    //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
-    OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, CREATE);
-    if (open_result != OPEN_OK) {
-        registry_manager_free(&registry_manager);
-        _print_open_result_message(open_result);
-        return false;
-    }
-
-    //Se não houverem registros no csv, encerra o programa
-    if (registries->data_arr == NULL) {
-        registry_manager_free(&registry_manager);
-        virtual_registry_array_delete(&registries);
-        return true;
-    } 
     
-    //Escreve os registros do csv no arquivo binário
-    registry_manager_insert_arr_at_end(registry_manager, registries->data_arr, registries->size);
-
-    //Libera memória da estrutura de dados utilizada para conter o csv
-    virtual_registry_array_delete(&registries);
+    VirtualRegistry *registry = NULL;
+    while ((registry = csv_reader_readline(csv_reader)) != NULL) {
+        registry_manager_insert_at_end(registry_manager, registry);
+        virtual_registry_free(&registry);
+    }
 
     //Define o status como "1", fecha o arquivo e desaloca a memoria
     registry_manager_free(&registry_manager);
+    csv_reader_free(&csv_reader);
 
     return true;
 
