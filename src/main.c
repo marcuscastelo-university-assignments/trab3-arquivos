@@ -6,6 +6,8 @@
         - Marcus Vinicius Castelo Branco Martins      nUSP: 11219237
 */
 
+//TODO: atualizar comentários (com muito rigor pq mudou tudo)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,10 +59,10 @@ static void _print_open_result_message(OPEN_RESULT open_result) {
  *      const char *bin_filename -> nome do arquivo binário em que serão escritos os registros
  *  Retorno: void
  */
-void funcionalidade1(char *csv_filename, char *bin_filename) {
+static bool funcionalidade1(char *csv_filename, char *bin_filename) {
     if (bin_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade1()\n");
-        return;
+        return false;
     }
     
     //Cria um RegistryManager para fazer o gerenciamento dos dados, ler especificação do TAD
@@ -68,7 +70,7 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't create RegistryManager @funcionalidade1()\n");
-        return;
+        return false;
     }
 
     //TODO: csv ler e ir salvando
@@ -77,7 +79,7 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
     
     if (registries == NULL) {
         printf("Falha no carregamento do arquivo.\n");
-        return;
+        return false;
     }
 
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
@@ -85,15 +87,14 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         _print_open_result_message(open_result);
-        return;
+        return false;
     }
 
     //Se não houverem registros no csv, encerra o programa
     if (registries->data_arr == NULL) {
         registry_manager_free(&registry_manager);
         virtual_registry_array_delete(&registries);
-        binarioNaTela(bin_filename);
-        return;
+        return true;
     } 
     
     //Escreve os registros do csv no arquivo binário
@@ -105,7 +106,8 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
     //Define o status como "1", fecha o arquivo e desaloca a memoria
     registry_manager_free(&registry_manager);
 
-    binarioNaTela(bin_filename);
+    return true;
+
 }
 
 void _DMForeachCallback_print_register(RegistryManager *manager, VirtualRegistry *registry) {
@@ -118,10 +120,10 @@ void _DMForeachCallback_print_register(RegistryManager *manager, VirtualRegistry
  *      const char *bin_filename -> nome do arquivo em que serão lidos os registros
  *  Retorno: void      
  */
-void funcionalidade2(char *bin_filename) {
+static bool funcionalidade2(char *bin_filename) {
     if (bin_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade2()\n");
-        return;
+        return false;
     }
 
     //Cria um RegistryManager para fazer o gerenciamento dos dados
@@ -129,7 +131,7 @@ void funcionalidade2(char *bin_filename) {
     
     if (registry_manager == NULL) {
         DP("ERROR: couldn't allocate memory for registry_manager @funcionalidade2()\n");
-        return;
+        return false;
     }
 
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
@@ -137,15 +139,16 @@ void funcionalidade2(char *bin_filename) {
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         _print_open_result_message(open_result);
-        return;
+        return false;
     }
 
     //Se não houverem registros, exibir mensagem conforme especificação do trabalho (obs: ignorando especificação do trabalho 1, que usa 'i' minúsculo. Supondo ser um erro de digitação)
-    if (registry_manager_is_empty(registry_manager)) printf("Registro Inexistente.\n");
+    if (registry_manager_is_empty(registry_manager)) printf("Registro inexistente.\n");
     else registry_manager_for_each(registry_manager, _DMForeachCallback_print_register);
 
     //Deleta o RegistryManager, fechando o arquivo e liberando a memoria
     registry_manager_free(&registry_manager);
+    return true;
 }
 
 
@@ -155,10 +158,10 @@ void funcionalidade2(char *bin_filename) {
  *      char *bin_filename -> nome do arquivo em que serão lidos os registros
  *  Retorno: void
  */
-void funcionalidade3 (char *bin_filename) {
+static bool funcionalidade3 (char *bin_filename) {
     if (bin_filename == NULL) {
         DP("ERROR: (parameter) invalid null filename @funcionalidade3()\n");
-        return;
+        return false;
     }
 
     //Cria uma variavel do tipo RegistryManager para fazer o gerenciamento dos dados
@@ -166,7 +169,7 @@ void funcionalidade3 (char *bin_filename) {
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't create RegistryManager @funcionalidade3()\n");
-        return;
+        return false;
     }
     
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
@@ -176,20 +179,20 @@ void funcionalidade3 (char *bin_filename) {
 
         //Ao interromper o fluxo padrão, é necessário limpar a memória
         registry_manager_free(&registry_manager);
-        return;
+        return false;
     }
 
     //Le os campos e valores dados pelo usuarios para ser usado na busca
     VirtualRegistry *search_sample_registry = virtual_registry_create_from_input(false);
     if (search_sample_registry == NULL) {
         DP("ERROR: couldn't get registry filters from user @funcionalidade3\n");
-        return;
+        return false;
     }
 
     VirtualRegistryArray *reg_search_terms = virtual_registry_array_create_unique(search_sample_registry);
     if (reg_search_terms == NULL) {
         DP("ERROR: couldn't allocate memory for VirtualRegistryArray @funcionalidade3\n");
-        return;
+        return false;
     }
 
     int foundRegistersCount = registry_manager_for_each_match(registry_manager, reg_search_terms, _DMForeachCallback_print_register);
@@ -200,6 +203,7 @@ void funcionalidade3 (char *bin_filename) {
     //Desaloca toda a memoria utilizada e fecha o arquivo (efeito colateral de deletar o RegistryManager)
     virtual_registry_array_delete(&reg_search_terms);
     registry_manager_free(&registry_manager);
+    return true;
 }
 
 /*
@@ -209,15 +213,15 @@ void funcionalidade3 (char *bin_filename) {
         char *RRN_str -> string contendo o RRN (int) do registro a ser lido
     Retorno: void
 */
-void funcionalidade4 (char *bin_filename, char *RRN_str) {
+static bool funcionalidade4 (char *bin_filename, char *RRN_str) {
     if (bin_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade4()\n");
-        return;
+        return false;
     }
 
     if (RRN_str == NULL) {
         DP("ERROR: invalid RRN @funcionalidade5()\n");
-        return;
+        return false;
     }
 
     //Cria uma variavel do tipo RegistryManager para fazer o gerenciamento dos dados    
@@ -226,7 +230,7 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't allocate memory for registry_manager @funcionalidade4()\n");
-        return;
+        return false;
     }
     
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
@@ -234,26 +238,33 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         _print_open_result_message(open_result);
-        return;
+        return false;
     }
 
-    if (registry_manager_is_empty(registry_manager)) printf("Registro Inexistente.\n");
+    if (registry_manager_is_empty(registry_manager)) {
+        printf("Registro Inexistente.\n");
+        registry_manager_free(&registry_manager);
+        return true;
+    }
 
     //pega o registro no RRN dado
     VirtualRegistry *reg_data = registry_manager_fetch_at(registry_manager, RRN);
 
-
     //Printa o registro caso exista
-    if (reg_data == NULL)
+    if (reg_data == NULL) {
         printf("Registro Inexistente.\n");
-    else
-        virtual_registry_print(reg_data);
+        registry_manager_free(&registry_manager);
+        return true;
+    }
+    
+    virtual_registry_print(reg_data);
 
     //Desaloca toda a memoria
     if (reg_data != NULL)
         virtual_registry_free(&reg_data);
     
     registry_manager_free(&registry_manager);
+    return true;
 }
 
 
@@ -264,16 +275,16 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
         char *n_str -> string contendo a quantidade (int) de filtros
     Retorno: void
 */
-void funcionalidade5 (char *bin_filename, char *n_str) {
+static bool funcionalidade5 (char *bin_filename, char *n_str) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade5()\n");
-        return;
+        return false;
     }
 
     if (n_str == NULL) {
         DP("ERROR: invalid parameter @funcionalidade5()\n");
-        return;
+        return false;
     }
 
     //Cria uma variável do tipo RegistryManager para fazer o gerenciamento dos dados     
@@ -282,7 +293,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't allocate memory for registry_manager @funcionalidade5()\n");
-        return;
+        return false;
     }
     
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
@@ -291,13 +302,12 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     if (open_result != OPEN_OK) { 
         _print_open_result_message(open_result);
         registry_manager_free(&registry_manager);
-        return;
+        return false;
     }
 
     if (registry_manager_is_empty(registry_manager)) {
         registry_manager_free(&registry_manager);
-        binarioNaTela(bin_filename);
-        return;
+        return true;
     }
 
     RegistryLinkedList *list = registry_linked_list_create();
@@ -307,7 +317,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     if (list == NULL) {
         DP("ERROR: couldn't allocate memory for RegistryLinkedList @funcionalidade5()\n");
         registry_manager_free(&registry_manager);
-        return;
+        return false;
     }
 
     //Le todos os filtros de remocao dados pelo usuario e insere na linked list
@@ -318,7 +328,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
             DP("ERROR: couldn't allocate memory for VirtualRegistry @funcionalidade5()\n");
             registry_manager_free(&registry_manager);
             registry_linked_list_delete(&list, true);
-            return;
+            return false;
         }
         
         registry_linked_list_insert(list, reg_filter);
@@ -333,7 +343,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
         DP("ERRO: Failed to convert linked list to RegistryDataArray @funcionalidade5()\n");
         registry_manager_free(&registry_manager);
         registry_linked_list_delete(&list, true);
-        return;
+        return false;
     }
 
     //Libera a memória da lista lidada sem apagar os seus itens pelo mesmo motivo acima
@@ -346,7 +356,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     virtual_registry_array_delete(&reg_arr);
     registry_manager_free(&registry_manager);
 
-    binarioNaTela(bin_filename);
+    return true;
 }
 
 /*
@@ -356,23 +366,23 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
         char *n_str -> string contendo a quantidade (int) de registros a serem inseridos
     Retorno: void
 */
-void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionInfo *extInfo) {
+static bool funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionInfo *extInfo) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade6()\n");
-        return;
+        return false;
     }
     
     if (n_str == NULL) {
         DP("ERROR: invalid parameter @funcionalidade6()\n");
-        return;
+        return false;
     }
 
     //Tenta criar um RegistryManager
     RegistryManager *registry_manager = registry_manager_create();
     if (registry_manager == NULL) {
         DP("ERRO: unable to create RegistryManager @funcionalidade6\n");
-        return;
+        return false;
     }
 
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
@@ -380,7 +390,7 @@ void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionI
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         _print_open_result_message(open_result);
-        return;
+        return false;
     }
 
     char *campos[] = {"cidadeMae","cidadeBebe","idNascimento","idadeMae","dataNascimento","sexoBebe","estadoMae","estadoBebe"}; 
@@ -407,8 +417,8 @@ void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionI
         }
     }
 
-    registry_manager_free(&registry_manager);
-    binarioNaTela(bin_filename);
+    registry_manager_free(&registry_manager);    
+    return true;
 }
 
 /*
@@ -418,23 +428,23 @@ void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionI
         char *n_str -> string contendo a quantidade (int) de registros a serem atualizados
     Retorno: void
 */
-void funcionalidade7 (char *bin_filename, char *n_str) {
+static bool funcionalidade7 (char *bin_filename, char *n_str) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade7()\n");
-        return;
+        return false;
     }
     
     if (n_str == NULL) {
         DP("ERROR: invalid parameter @funcionalidade7()\n");
-        return;
+        return false;
     }
 
     //Tenta criar o RegistryManager
     RegistryManager *registry_manager = registry_manager_create();
     if (registry_manager == NULL) {
         DP("ERRO: unable to create RegistryManager @funcionalidade7\n");
-        return;
+        return false;
     }
 
 
@@ -444,7 +454,7 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         _print_open_result_message(open_result);
-        return;
+        return false;
     }
 
     int n = atoi(n_str);
@@ -471,18 +481,18 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
     //Libera o RegistryManager e fecha o arquivo
     registry_manager_free(&registry_manager);
 
-    binarioNaTela(bin_filename);
+    return true;
 }
 
 //TODO: remove debug function
 void printint (int a) {printf("%d\n", a);}
 
 //TODO: comment
-void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
+static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     //Validação de parâmetros
     if (reg_bin_filename == NULL || b_tree_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade8()\n");
-        return;
+        return false;
     }
 
     //Cria um RegistryManager para ler todos os registros em disco
@@ -490,7 +500,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't create RegistryManager @funcionalidade8()\n");
-        return;
+        return false;
     }
 
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
@@ -498,7 +508,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         _print_open_result_message(open_result);
-        return;
+        return false;
     }
 
     //TODO: fclose
@@ -506,7 +516,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
 
     if (b_tree_manager == NULL) {
         DP("ERROR: couldn't create BTreeManager @funcionalidade8()\n");
-        return;
+        return false;
     }
 
     open_result = b_tree_manager_open(b_tree_manager, b_tree_filename, CREATE);
@@ -514,7 +524,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     if (open_result != OPEN_OK) {
         _print_open_result_message(open_result);
         b_tree_manager_free(&b_tree_manager);
-        return;
+        return false;
     }
 
     RegistryHeader *reg_header = registry_manager_get_registry_header(registry_manager);
@@ -528,7 +538,6 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
             i--;
             continue;
         }
-        // printf("\n/////////////////////\n");
         b_tree_manager_insert(b_tree_manager, reg->idNascimento, RRN);
         virtual_registry_free(&reg);
     }
@@ -536,33 +545,40 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     b_tree_manager_free(&b_tree_manager);
     registry_manager_free(&registry_manager);
 
-    binarioNaTela(b_tree_filename);
-    return;
+    return true;
 }
 
 //TODO: remover includes desnecessários nos arquivos
-void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFieldStr, char *searchValueStr) {
+static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFieldStr, char *searchValueStr) {
     if (reg_filename == NULL || b_tree_filename == NULL || searchFieldStr == NULL || searchValueStr == NULL) {
         DP("Invalid arguments @funcionalidade9()\n");
-        return;
+        return false;
     }
 
     if (strcmp(searchFieldStr,"idNascimento") != 0) {
         DP("ERROR: trying to search in b-tree by unsuported field @funcionalidade9()\n");
         printf("Falha no processamento do arquivo\n");
-        return;
+        return false;
+    }
+
+    int idNascimento = atoi(searchValueStr);
+
+    //Em caso de resultado NaN
+    if (searchValueStr[0] != '0' && idNascimento == 0) {
+        DP("Trying to search a non-int idNascimento (idNascimentoStr = '%s')\n", searchValueStr);
+        if (DEBUG) return false;
     }
 
     BTreeManager *btman = b_tree_manager_create();
     if (btman == NULL) {
         DP("ERROR: couldn't allocate memory for BTreeManager\n");
-        return;
+        return false;
     }
 
     RegistryManager *regman = registry_manager_create();
     if (regman == NULL) {
         DP("ERROR: couldn't allocate memory for RegistryManager\n");
-        return;
+        return false;
     }
 
     OPEN_RESULT o_res;
@@ -571,15 +587,15 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
         _print_open_result_message(o_res);
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
-        return;
+        return false;
     }
 
-    int idNascimento = atoi(searchValueStr);
-
-    //Em caso de resultado NaN
-    if (searchValueStr[0] != '0' && idNascimento == 0) {
-        DP("Trying to search a non-int idNascimento (idNascimentoStr = '%s')\n", searchValueStr);
-        if (DEBUG) return;
+    o_res = registry_manager_open(regman, reg_filename, READ);
+    if (o_res != OPEN_OK) {
+        _print_open_result_message(o_res);
+        b_tree_manager_free(&btman);
+        registry_manager_free(&regman);
+        return false;
     }
 
     pairIntInt p = b_tree_manager_search_for(btman, idNascimento);
@@ -589,15 +605,7 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
         printf("Registro inexistente.\n");
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
-        return;
-    }
-
-    o_res = registry_manager_open(regman, reg_filename, READ);
-    if (o_res != OPEN_OK) {
-        _print_open_result_message(o_res);
-        b_tree_manager_free(&btman);
-        registry_manager_free(&regman);
-        return;
+        return false;
     }
 
     VirtualRegistry *registry = registry_manager_fetch_at(regman, p.first);
@@ -606,25 +614,27 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
     if (registry == NULL) {
         //TODO: definir comportamento e liberar memória
         DP("Registro deletado não implementado!\n");
-        // return;
+        if (DEBUG) return false;
     }
+    else {
+        //Exibe o registro
+        virtual_registry_print(registry);
+    } 
 
-    //Exibe o registro
-    virtual_registry_print(registry);
     printf("Quantidade de paginas da arvore-B acessadas: %d\n", p.second);
     virtual_registry_free(&registry);    
-
+    return true;
 }
 
-void funcionalidade10callback (Funcionalidade6ExtensionInfo *info) {
+void insertInBtreeCallback (Funcionalidade6ExtensionInfo *info) {
     b_tree_manager_insert(info->btman, info->idNascimento, info->RRN);
 }
 
-void funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
+static bool funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
     BTreeManager *btman = b_tree_manager_create();
     if (btman == NULL) {
         DP("ERROR: couldn't allocate memory for BTreeManager\n");
-        return;
+        return false;
     }
 
     OPEN_RESULT o_res;
@@ -632,22 +642,20 @@ void funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
     if (o_res != OPEN_OK) {
         _print_open_result_message(o_res);
         b_tree_manager_free(&btman);
-        return;
+        return false;
     }
 
     //Informações que são passadas para um callback da funcionalidade 6, que chama a funcionalidade10callback a cada inserção
     Funcionalidade6ExtensionInfo extensionInfo;
     extensionInfo.btman = btman;
-    extensionInfo.callback = funcionalidade10callback;
+    extensionInfo.callback = insertInBtreeCallback;
+    //Valores inválidos (não são utilizados)
     extensionInfo.idNascimento = -1;
     extensionInfo.RRN = -1;
-    funcionalidade6(reg_filename, n_str, &extensionInfo);
+    bool success = funcionalidade6(reg_filename, n_str, &extensionInfo);
     b_tree_manager_free(&btman);
-
-    //TODO: checar se o binarioNaTela da func6 deu certo
+    return success;
 }
-
-
 
 
 /**
@@ -748,73 +756,81 @@ int main(void) {
     //Decide qual função usar baseado na funcionalidade escolhida
     switch (funcionalidade_code) {
         //Para cada funcionalidade: lê os n parâmetros e chama a função com estes.
-        case 1:
+        case 1: {
             params = init_params(2); //n = 2
-            funcionalidade1(params[0], params[1]);
+            bool success = funcionalidade1(params[0], params[1]);
+            if (success) binarioNaTela(params[1]);
             free_params(&params, 2);
             break;
+        }
             
-        case 2:
+        case 2: {
             params = init_params(1); //n = 1
             funcionalidade2(params[0]);
             free_params(&params, 1);
             break;
+        }
             
-        case 3:
+        case 3: {
             params = init_params(1);
             funcionalidade3(params[0]);
             free_params(&params, 1);
             break;
+        }
 
-        case 4:
+        case 4: {
             params = init_params(2);
             funcionalidade4(params[0], params[1]);
             free_params(&params, 2);
             break;
+        }
 
-        case 5:
+        case 5: {
             params = init_params(2);
-            funcionalidade5(params[0], params[1]);
+            bool success = funcionalidade5(params[0], params[1]);
+            if (success) binarioNaTela(params[0]);
             free_params(&params, 2);
             break;
+        }
 
-        case 6:
+        case 6: {
             params = init_params(2);
-            funcionalidade6(params[0], params[1], NULL);
+            bool success = funcionalidade6(params[0], params[1], NULL);
+            if (success) binarioNaTela(params[0]);
             free_params(&params, 2);
             break;
+        }
         
-        case 7:
+        case 7: {
             params = init_params(2);
-            funcionalidade7(params[0], params[1]);
+            bool success = funcionalidade7(params[0], params[1]);
+            if (success) binarioNaTela(params[0]);
             free_params(&params, 2);
             break;
+        }
 
-        case 8:
+        case 8: {
             params = init_params(2);
-            funcionalidade8(params[0], params[1]);
+            bool success = funcionalidade8(params[0], params[1]);
+            if (success) binarioNaTela(params[1]);
             free_params(&params, 2);
             break;
+        }
 
-        case 9:
+        case 9: {
             params = init_params(4);
             funcionalidade9(params[0], params[1], params[2], params[3]);
             free_params(&params, 4);
             break;
+        }
 
-        case 10:
+        case 10: {
             params = init_params(3);
-            funcionalidade10(params[0], params[1], params[2]);
+            bool success = funcionalidade10(params[0], params[1], params[2]);
+            if (success) binarioNaTela(params[1]);
             free_params(&params, 3);
             break;
-        case 0:
-            params = init_params(1);
-            teste(params[0]);
-            free_params(&params, 1);
-            break;
-        // case 0:
-        //     teste2();
-        //     break;
+        }
 
         default:
             printf("Funcionalidade %c não implementada.\n", funcionalidade_code);
