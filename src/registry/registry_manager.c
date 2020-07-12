@@ -490,7 +490,7 @@ VirtualRegistryArray *registry_manager_fetch(RegistryManager *manager, VirtualRe
  *  Parâmetros:
  *      RegistryManager *manager -> gerenciador que possui o arquivo aberto
  *  Retorno:
- *      VirtualRegistry* -> Registro encontrado no RRN especificado ou NULL se não encontrado
+ *      VirtualRegistry* -> Registro encontrado no RRN especificado ou NULL se não encontrado (deve ser liberado manualmente)
  * 
  */
 VirtualRegistry *registry_manager_fetch_at(RegistryManager *manager, int RRN) {
@@ -555,7 +555,7 @@ int registry_manager_for_each_match(RegistryManager *manager, VirtualRegistryArr
         }
 
         //Libera a memória do registro na RAM
-        virtual_registry_delete(&reg_data);
+        virtual_registry_free(&reg_data);
     }
 
 	return foundRegistries;

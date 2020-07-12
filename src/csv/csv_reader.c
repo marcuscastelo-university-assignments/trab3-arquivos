@@ -88,7 +88,7 @@ VirtualRegistryArray *csv_read_all_lines(const char *file_name) {
     if ((dummy_headers = csv_read_line(csv_file)) == NULL) {
         fclose(csv_file);
         return virtual_registry_array_create(NULL, 0); //Retorna um vetor alocado, porém sem registros
-    } else virtual_registry_delete(&dummy_headers);
+    } else virtual_registry_free(&dummy_headers);
 
     //2. Salva todos os registros em uma lista ligada
     RegistryLinkedList *list = registry_linked_list_create();

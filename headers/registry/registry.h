@@ -37,7 +37,7 @@ VirtualRegistry *virtual_registry_create_copy(VirtualRegistry *base);
 VirtualRegistry *virtual_registry_create();
 VirtualRegistry *virtual_registry_create_masked(RegistryFieldsMask compareFields);
 
-void virtual_registry_delete(VirtualRegistry **reg_data_ptr);
+void virtual_registry_free(VirtualRegistry **reg_data_ptr);
 
 void virtual_registry_set_fieldmask(VirtualRegistry *reg_data, RegistryFieldsMask mask);
 void virtual_registry_add_fieldmask(VirtualRegistry *reg_data, RegistryFieldsMask mask);

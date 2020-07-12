@@ -110,7 +110,7 @@ static void _recursive_delete_nodes(RegistryLinkedListNode *node, bool should_de
     if (node == NULL) return;
     _recursive_delete_nodes(node->next, should_delete_data);
     
-    if (should_delete_data) virtual_registry_delete(&node->data);
+    if (should_delete_data) virtual_registry_free(&node->data);
     node->data = NULL;
     node->next = NULL;
     free(node);

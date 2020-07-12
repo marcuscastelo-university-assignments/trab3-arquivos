@@ -27,7 +27,7 @@
 
 typedef struct _Funcionalidade6ExtensionInfo
 {
-    FILE *b_tree_file_stream;
+    BTreeManager *btman;
     int idNascimento, RRN;
     void (*callback)(struct _Funcionalidade6ExtensionInfo *info);
 } Funcionalidade6ExtensionInfo;
@@ -43,7 +43,7 @@ typedef struct _Funcionalidade6ExtensionInfo
  *  Retorno:
  *      void
  */
-void print_registry_manager_open_result_message(OPEN_RESULT open_result) {
+static void _print_open_result_message(OPEN_RESULT open_result) {
     if (open_result & (OPEN_FAILED | OPEN_INCONSISTENT)) printf("Falha no processamento do arquivo.\n");
     else if (open_result & OPEN_INVALID_ARGUMENT) DP("ERRO: Um argumento inválido foi informado\n");
 }
@@ -82,7 +82,7 @@ void funcionalidade1(char *csv_filename, char *bin_filename) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, CREATE);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         return;
     }
 
@@ -134,7 +134,7 @@ void funcionalidade2(char *bin_filename) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, READ);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         return;
     }
 
@@ -170,7 +170,7 @@ void funcionalidade3 (char *bin_filename) {
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, READ);
     if (open_result != OPEN_OK) {
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
 
         //Ao interromper o fluxo padrão, é necessário limpar a memória
         registry_manager_free(&registry_manager);
@@ -231,7 +231,7 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, READ);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         return;
     }
 
@@ -249,7 +249,7 @@ void funcionalidade4 (char *bin_filename, char *RRN_str) {
 
     //Desaloca toda a memoria
     if (reg_data != NULL)
-        virtual_registry_delete(&reg_data);
+        virtual_registry_free(&reg_data);
     
     registry_manager_free(&registry_manager);
 }
@@ -287,7 +287,7 @@ void funcionalidade5 (char *bin_filename, char *n_str) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, MODIFY);
 
     if (open_result != OPEN_OK) { 
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         registry_manager_free(&registry_manager);
         return;
     }
@@ -377,7 +377,7 @@ void funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionI
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, MODIFY);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         return;
     }
 
@@ -441,7 +441,7 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, MODIFY);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         return;
     }
 
@@ -463,7 +463,7 @@ void funcionalidade7 (char *bin_filename, char *n_str) {
         registry_manager_update_at(registry_manager, RRN, reg_updater);
         
         //Libera a memória do updater
-        virtual_registry_delete(&reg_updater);
+        virtual_registry_free(&reg_updater);
     }
 
     //Libera o RegistryManager e fecha o arquivo
@@ -483,7 +483,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
         return;
     }
 
-    //Cria um RegistryManager para fazer o gerenciamento dos dados, ler especificação do TAD
+    //Cria um RegistryManager para ler todos os registros em disco
     RegistryManager *registry_manager = registry_manager_create();
 
     if (registry_manager == NULL) {
@@ -495,7 +495,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, reg_bin_filename, CREATE);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         return;
     }
 
@@ -510,16 +510,16 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     open_result = b_tree_manager_open(b_tree_manager, b_tree_filename, CREATE);
 
     if (open_result != OPEN_OK) {
-        print_registry_manager_open_result_message(open_result);
+        _print_open_result_message(open_result);
         b_tree_manager_free(&b_tree_manager);
         return;
     }
 
     RegistryHeader *reg_header = registry_manager_get_registry_header(registry_manager);
-    int totalRegistries = reg_header_get_registries_count(reg_header);
+    int registryCount = reg_header_get_registries_count(reg_header);
     int RRN = -1;
     
-    for (int i = 0; i < totalRegistries; i++) {
+    for (int i = 0; i < registryCount; i++) {
         RRN++;
         VirtualRegistry *reg = registry_manager_fetch_at(registry_manager, RRN);
         if (reg == NULL) {
@@ -528,7 +528,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
         }
 
         b_tree_manager_insert(b_tree_manager, reg->idNascimento, RRN);
-        virtual_registry_delete(&reg);
+        virtual_registry_free(&reg);
     }
 
     b_tree_manager_free(&b_tree_manager);
@@ -539,19 +539,108 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
 }
 
 //TODO: remover includes desnecessários nos arquivos
-void funcionalidade9 (char *bin_filename, char *n_str, char *field, char *value) {
+void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFieldStr, char *searchValueStr) {
+    if (reg_filename == NULL || b_tree_filename == NULL || searchFieldStr == NULL || searchValueStr == NULL) {
+        DP("Invalid arguments @funcionalidade9()\n");
+        return;
+    }
+
+    if (strcmp(searchFieldStr,"idNascimento") != 0) {
+        DP("ERROR: trying to search in b-tree by unsuported field @funcionalidade9()\n");
+        printf("Falha no processamento do arquivo\n");
+        return;
+    }
+
+    BTreeManager *btman = b_tree_header_create();
+    if (btman == NULL) {
+        DP("ERROR: couldn't allocate memory for BTreeManager\n");
+        return;
+    }
+
+    RegistryManager *regman = registry_manager_create();
+    if (regman == NULL) {
+        DP("ERROR: couldn't allocate memory for RegistryManager\n");
+        return;
+    }
+
+    OPEN_RESULT o_res;
+    o_res = b_tree_manager_open(btman, b_tree_filename, READ);
+    if (o_res != OPEN_OK) {
+        _print_open_result_message(o_res);
+        b_tree_manager_free(&btman);
+        registry_manager_free(&regman);
+    }
+
+    int idNascimento = atoi(searchValueStr);
+
+    //Em caso de resultado NaN
+    if (searchValueStr[0] != '0' && idNascimento == 0) {
+        DP("Trying to search a non-int idNascimento (idNascimentoStr = '%s')\n", searchValueStr);
+        if (DEBUG) return;
+    }
+
+    int REG_RRN = b_tree_manager_search_for(btman, idNascimento);
+
+    //Se não for encontrado
+    if (REG_RRN == -1) {
+        printf("Registro Inexistente\n");
+        b_tree_manager_free(&btman);
+        registry_manager_free(&regman);
+    }
+
+    o_res = registry_manager_open(regman, reg_filename, READ);
+    if (o_res != OPEN_OK) {
+        _print_open_result_message(o_res);
+        b_tree_manager_free(&btman);
+        registry_manager_free(&regman);
+    }
+
+    VirtualRegistry *registry = registry_manager_fetch_at(regman, REG_RRN);
+
+    //Caso de ter sido deletado (ou RRN inválido)
+    if (registry == NULL) {
+        //TODO: definir comportamento e liberar memória
+    }
+
+    //Exibe o registro
+    virtual_registry_print(registry);
+    virtual_registry_free(&registry);    
+
+    //TODO: mostrar a quantidade de páginas de disco que foram acessadas : LUCAS
+
+    //TODO: ver se faltou algo
 
 }
 
-void funcionalidade10 (Funcionalidade6ExtensionInfo *info) {
-    FILE *stream = info->b_tree_file_stream;
-    BTHeader *header = b_tree_header_create();
-    b_tree_header_read_from_bin(header, stream);
-    // BTreeManager *manager = b_tree_manager_create(stream, header);
-
-    //TODO: Inserir
-    // b_tree_manager_write_at(manager, info->RRN, );
+void funcionalidade10callback (Funcionalidade6ExtensionInfo *info) {
+    b_tree_manager_insert(info->btman, info->idNascimento, info->RRN);
 }
+
+void funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
+    BTreeManager *btman = b_tree_header_create();
+    if (btman == NULL) {
+        DP("ERROR: couldn't allocate memory for BTreeManager\n");
+        return;
+    }
+
+    OPEN_RESULT o_res;
+    o_res = b_tree_manager_open(btman, b_tree_filename, READ);
+    if (o_res != OPEN_OK) {
+        _print_open_result_message(o_res);
+        b_tree_manager_free(&btman);
+    }
+
+    //Informações que são passadas para um callback da funcionalidade 6, que chama a funcionalidade10callback a cada inserção
+    Funcionalidade6ExtensionInfo extensionInfo;
+    extensionInfo.btman = btman;
+    extensionInfo.callback = funcionalidade10callback;
+    funcionalidade6(reg_filename, n_str, &extensionInfo);
+    b_tree_manager_free(&btman);
+
+    //TODO: checar se o binarioNaTela da func6 deu certo
+}
+
+
 
 
 /**
@@ -692,16 +781,10 @@ int main(void) {
             break;
 
         case 10:
-            params = init_params(2);
-            Funcionalidade6ExtensionInfo extensionInfo;
-            extensionInfo.b_tree_file_stream = fopen("foda", "rb+");
-            extensionInfo.callback = funcionalidade10;
-            funcionalidade6(params[0], params[1], &extensionInfo);
-
-            fclose(extensionInfo.b_tree_file_stream);
-            free_params(&params, 2);
+            params = init_params(3);
+            funcionalidade10(params[0], params[1], params[2]);
+            free_params(&params, 3);
             break;
-
         case 0:
             teste();
             break;
