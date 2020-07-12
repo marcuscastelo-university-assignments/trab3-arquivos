@@ -60,10 +60,6 @@ int b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
     if (node->n == B_TREE_ORDER-1)
         return -1;
 
-    // DP("\nC: %dPr: %d\n", C, Pr);
-    // b_tree_node_print(node);
-    // DP("\n");
-
     int pos;
 
     for (int i = 0; i < B_TREE_ORDER-1; i++) {
@@ -87,7 +83,6 @@ int b_tree_node_sorted_insert_item (BTreeNode *node, int C, int Pr) {
         }
     }
 
-    // b_tree_node_print(node);
     node->n++;
 
     return pos;
