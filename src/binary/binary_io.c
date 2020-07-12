@@ -80,10 +80,7 @@ char binary_read_char(FILE *file) {
         return '$';
 
     char c = '\0';
-    if (fread(&c, sizeof(char), 1, file) <= 0){
-        //TODO: ver se mantém ou tira essa mensagem
-        DP("ERROR: fread failed, probably opened in read-only mode\n");
-    }
+    fread(&c, sizeof(char), 1, file);
 
     return c;
 }

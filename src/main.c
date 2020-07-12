@@ -447,7 +447,6 @@ static bool funcionalidade7 (char *bin_filename, char *n_str) {
     }
 
 
-    //TODO: ver no runcodes se precisa de "Registro Inexistente"
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, MODIFY);
     if (open_result != OPEN_OK) {
@@ -483,9 +482,6 @@ static bool funcionalidade7 (char *bin_filename, char *n_str) {
     return true;
 }
 
-//TODO: remove debug function
-void printint (int a) {printf("%d\n", a);}
-
 //TODO: comment
 static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     //Validação de parâmetros
@@ -510,7 +506,6 @@ static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
         return false;
     }
 
-    //TODO: fclose
     BTreeManager *b_tree_manager = b_tree_manager_create();
 
     if (b_tree_manager == NULL) {
@@ -708,7 +703,7 @@ void free_params(char ***params_ptr, int quantity) {
 void teste (char *btree_filename) {
     BTreeManager *man = b_tree_manager_create();
     b_tree_manager_open(man, btree_filename, READ);
-    BTHeader *header = get_header(man);
+    BTreeHeader *header = get_header(man);
     
     int n = b_tree_header_get_proxRRN(header);
 

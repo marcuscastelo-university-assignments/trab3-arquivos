@@ -13,9 +13,8 @@
 typedef struct _insert_answer insert_answer;
 typedef struct _b_tree_manager BTreeManager;
 
-//TODO: marcus BTHeader -> BTreeHeader
 //TODO: marcus arrumar
-BTHeader *get_header(BTreeManager *man);
+BTreeHeader *get_header(BTreeManager *man);
 BTreeNode *_read_node_at(BTreeManager *manager, int RRN);
 
 BTreeManager *b_tree_manager_create(void);

@@ -27,7 +27,7 @@ void registry_manager_update_at(RegistryManager *manager, int RRN, VirtualRegist
 
 void registry_manager_delete_current (RegistryManager *manager);
 
-//TODO: comentar
+//Typedef que simplifica o tipo function pointer usado como callback do registry manager (na funcão for_each_match e for_each)
 typedef void (*RMForeachCallback)(RegistryManager *manager, VirtualRegistry *match_registry);
 
 

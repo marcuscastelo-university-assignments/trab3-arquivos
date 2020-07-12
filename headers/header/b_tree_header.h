@@ -17,27 +17,27 @@ typedef enum {
     BTHMASK_ALL = 31
 } ChangedBTHeadersMask;
 
-typedef struct _b_tree_header BTHeader;
+typedef struct _b_tree_header BTreeHeader;
 
-BTHeader *b_tree_header_create(void);
-void b_tree_header_free(BTHeader **header_ptr);
+BTreeHeader *b_tree_header_create(void);
+void b_tree_header_free(BTreeHeader **header_ptr);
 
-void b_tree_header_write_to_bin(BTHeader *header, FILE *file);
-void b_tree_header_read_from_bin(BTHeader *header, FILE *bin_file);
+void b_tree_header_write_to_bin(BTreeHeader *header, FILE *file);
+void b_tree_header_read_from_bin(BTreeHeader *header, FILE *bin_file);
 
-char b_tree_header_get_status(BTHeader *header);
-void b_tree_header_set_status(BTHeader *header, char new_status);
+char b_tree_header_get_status(BTreeHeader *header);
+void b_tree_header_set_status(BTreeHeader *header, char new_status);
 
-int b_tree_header_get_noRaiz (BTHeader *header);
-void b_tree_header_set_noRaiz (BTHeader *header, int new_value);
+int b_tree_header_get_noRaiz (BTreeHeader *header);
+void b_tree_header_set_noRaiz (BTreeHeader *header, int new_value);
 
-int b_tree_header_get_nroNiveis (BTHeader *header);
-void b_tree_header_set_nroNiveis (BTHeader *header, int new_value);
+int b_tree_header_get_nroNiveis (BTreeHeader *header);
+void b_tree_header_set_nroNiveis (BTreeHeader *header, int new_value);
 
-int b_tree_header_get_proxRRN (BTHeader *header);
-void b_tree_header_set_proxRRN (BTHeader *header, int new_value);
+int b_tree_header_get_proxRRN (BTreeHeader *header);
+void b_tree_header_set_proxRRN (BTreeHeader *header, int new_value);
 
-int b_tree_header_get_nroChaves (BTHeader *header);
-void b_tree_header_set_nroChaves (BTHeader *header, int new_value);
+int b_tree_header_get_nroChaves (BTreeHeader *header);
+void b_tree_header_set_nroChaves (BTreeHeader *header, int new_value);
 
 #endif  //!__B_TREE_HEADER__H__

@@ -130,7 +130,6 @@ void csv_reader_free(CsvReader **reader_ptr) {
 
 	csv_reader_close(reader);
 
-	//TODO: falta fclose
 	//Redefine os valores ao padrão inicial
 	reader -> csv_file = NULL;
 	free(reader);

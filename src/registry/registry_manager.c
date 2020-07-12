@@ -99,9 +99,6 @@ OPEN_RESULT registry_manager_open(RegistryManager *manager, char* bin_filename, 
             reg_header_set_status(manager->header, '0');
             reg_header_write_to_bin(manager->header, manager->bin_file);
         }
-		
-
-		//TODO: checar se tirar o OPEN_EMPTY deu ruim
     }
     
     return OPEN_OK;
@@ -610,7 +607,6 @@ void registry_manager_update_at(RegistryManager *manager, int RRN, VirtualRegist
 
     _seek_registry(manager, RRN);
 
-    //TODO: ler a especificação pra saber quando conta como atualizado (se for um removido?, se nada mudar no registro?)
     if (_update_current_registry(manager, new_data) == true) { //Indica que o registro a ser atualizado não era deletado e não houveram mais erros
         reg_header_set_updated_count(manager->header, H_INCREASE);
     }

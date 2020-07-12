@@ -25,7 +25,7 @@ struct _insert_answer {
 	e para diferenciacao de nivel de complexidade no programa
 */
 struct _b_tree_manager {
-	BTHeader *header;			//Referência ao header gerenciado pelo DataManager
+	BTreeHeader *header;			//Referência ao header gerenciado pelo DataManager
 	OPEN_MODE requested_mode;
 	FILE *bin_file;			//ponteiro do arquivo aberto e tendo seus registros gerenciados
 	int currRRN;			//RRN atual do ponteiro
@@ -214,7 +214,6 @@ void b_tree_manager_free(BTreeManager **manager_ptr) {
 
 	b_tree_manager_close(manager);
 
-	//TODO: falta fclose
 	//Redefine os valores ao padrão inicial
 	manager -> bin_file = NULL;
 	manager -> currRRN = -1;
@@ -455,6 +454,6 @@ pairIntInt b_tree_manager_search_for (BTreeManager *manager, int key) {
 	return p;
 }
 
-BTHeader *get_header(BTreeManager *man) {
+BTreeHeader *get_header(BTreeManager *man) {
 	return man->header;
 }

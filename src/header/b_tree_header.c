@@ -29,11 +29,11 @@ struct _b_tree_header {
 /**
  *  Factory de criação do TAD descrito acima
  *  Parâmetros: void
- *  Retorno: BTHeader* -> a instância criada pelo factory
+ *  Retorno: BTreeHeader* -> a instância criada pelo factory
  */
-BTHeader *b_tree_header_create(void) {
+BTreeHeader *b_tree_header_create(void) {
     //Tenta alocar memória
-    BTHeader *header = malloc(sizeof(BTHeader));
+    BTreeHeader *header = malloc(sizeof(BTreeHeader));
     if (header == NULL) {
         DP("ERROR: not enough memory @header_create()\n");
         return NULL;
@@ -54,12 +54,12 @@ BTHeader *b_tree_header_create(void) {
 
 
 /**
- *  Libera a memória usada pelo TAD BTHeader
+ *  Libera a memória usada pelo TAD BTreeHeader
  *  Parâmetros:
- *      BTHeader **header_ptr -> referência à variável que guarda o pointer para o TAD
+ *      BTreeHeader **header_ptr -> referência à variável que guarda o pointer para o TAD
  *  Retorno: void
  */
-void b_tree_header_free(BTHeader **header_ptr) {
+void b_tree_header_free(BTreeHeader **header_ptr) {
     //Validação de parâmetros
     if (header_ptr == NULL) {
         DP("ERROR: (parameter) invalid null pointer @b_tree_header_free()\n");
@@ -77,11 +77,11 @@ void b_tree_header_free(BTHeader **header_ptr) {
  *  Função otimizada para evitar escritas desnecessárias ao disco
  *  Para isso, cada campo tem um indicador de modificação. Se o campo tiver sido modificado, ele precisa ser escrito.
  *  Parâmetros:
- *      BTHeader *header -> struct que contêm os headers a serem escritos, se necessário.
+ *      BTreeHeader *header -> struct que contêm os headers a serem escritos, se necessário.
  *      FILE *file -> stream com escrita permitida do arquivo binário destino
  *  Retorno: void
  */
-void b_tree_header_write_to_bin(BTHeader *header, FILE *file) {
+void b_tree_header_write_to_bin(BTreeHeader *header, FILE *file) {
     //Validação de parâmetros
     if (header == NULL) {
         DP("ERROR: (parameter) invalid null header @b_tree_header_write_to_bin()\n");
@@ -169,11 +169,11 @@ void b_tree_header_write_to_bin(BTHeader *header, FILE *file) {
 /**
  *  Atualiza o valor dos headers, lendo diretamente do disco.
  *  Parâmetros:
- *      BTHeader *header -> header para o qual será direcionada a informação no disco presente
+ *      BTreeHeader *header -> header para o qual será direcionada a informação no disco presente
  *      FILE *bin_file -> arquivo aberto do qual os headers serão lidos
  *  Retorno: void
  */
-void b_tree_header_read_from_bin(BTHeader *header, FILE *bin_file) {
+void b_tree_header_read_from_bin(BTreeHeader *header, FILE *bin_file) {
     //Validação de parâmetros
     if (header == NULL) {
         DP("ERROR: (parameter) invalid null header @b_tree_header_read_from_bin()\n");
@@ -202,62 +202,62 @@ void b_tree_header_read_from_bin(BTHeader *header, FILE *bin_file) {
 /*
 	Simples função get, retorna o valor encapsulado (status)
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
     Retorno:
         char -> status: '0' = inconsistente, '1' = consistente
 */
-char b_tree_header_get_status (BTHeader *header) { return header->status; }
+char b_tree_header_get_status (BTreeHeader *header) { return header->status; }
 
 /*
 	Simples função get, retorna o valor encapsulado (next_RRN)
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
     Retorno:
         int -> o próximo RRN do arquivo
 */
-// int b_tree_header_get_next_RRN (BTHeader *header) { return header->noRaiz; }
-int b_tree_header_get_noRaiz (BTHeader *header) { return header->noRaiz; }
+// int b_tree_header_get_next_RRN (BTreeHeader *header) { return header->noRaiz; }
+int b_tree_header_get_noRaiz (BTreeHeader *header) { return header->noRaiz; }
 
 /*
 	Simples função get, retorna o valor encapsulado (registries_count)
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
     Retorno:
         int -> a quantidade de registros
 */
-// int b_tree_header_get_registries_count (BTHeader *header) { return header->nroNiveis; }
-int b_tree_header_get_nroNiveis (BTHeader *header) { return header->nroNiveis; }
+// int b_tree_header_get_registries_count (BTreeHeader *header) { return header->nroNiveis; }
+int b_tree_header_get_nroNiveis (BTreeHeader *header) { return header->nroNiveis; }
 
 /*
 	Simples função get, retorna o valor encapsulado (removed_count)
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
     Retorno:
         int -> a quantidade de registros removidos
 */
-// int b_tree_header_get_removed_count (BTHeader *header) { return header->proxRRN; }
-int b_tree_header_get_proxRRN (BTHeader *header) { return header->proxRRN; }
+// int b_tree_header_get_removed_count (BTreeHeader *header) { return header->proxRRN; }
+int b_tree_header_get_proxRRN (BTreeHeader *header) { return header->proxRRN; }
 
 /*
 	Simples função get, retorna o valor encapsulado (updated_count)
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
     Retorno:
         int -> a quantidade de registros atualizados
 */
-// int b_tree_header_get_updated_count (BTHeader *header) { return header->nroChaves; }
-int b_tree_header_get_nroChaves (BTHeader *header) { return header->nroChaves; }
+// int b_tree_header_get_updated_count (BTreeHeader *header) { return header->nroChaves; }
+int b_tree_header_get_nroChaves (BTreeHeader *header) { return header->nroChaves; }
 
 /*
 	Simples função set, define o valor encapsulado (status).
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
         char new_status -> '0' = inconsistente, '1' = consistente
     Retorno: void
 */
-void b_tree_header_set_status(BTHeader *header, char new_status) {
+void b_tree_header_set_status(BTreeHeader *header, char new_status) {
     //Validação de parâmetros
     if (header == NULL) {
         DP("ERROR: (parameter) invalid null header @b_tree_header_set_status()\n");
@@ -289,11 +289,11 @@ static int _parse_counter(int current_value, int counter) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void b_tree_header_set_noRaiz (BTHeader *header, int new_value) {
+void b_tree_header_set_noRaiz (BTreeHeader *header, int new_value) {
 	header->noRaiz = _parse_counter(header->noRaiz, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -305,11 +305,11 @@ void b_tree_header_set_noRaiz (BTHeader *header, int new_value) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void b_tree_header_set_nroNiveis (BTHeader *header, int new_value) {
+void b_tree_header_set_nroNiveis (BTreeHeader *header, int new_value) {
 	header->nroNiveis = _parse_counter(header->nroNiveis, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -321,11 +321,11 @@ void b_tree_header_set_nroNiveis (BTHeader *header, int new_value) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void b_tree_header_set_proxRRN (BTHeader *header, int new_value) {
+void b_tree_header_set_proxRRN (BTreeHeader *header, int new_value) {
 	header->proxRRN = _parse_counter(header->proxRRN, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
@@ -337,11 +337,11 @@ void b_tree_header_set_proxRRN (BTHeader *header, int new_value) {
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
-        BTHeader *header -> pointer para a struct referida.
+        BTreeHeader *header -> pointer para a struct referida.
         int new_value -> novo valor para o header, se >= 0. Se for H_INCREASE ou H_DECREASE fará o incremento ou o decremento, respectivamente.
     Retorno: void
 */
-void b_tree_header_set_nroChaves (BTHeader *header, int new_value) {
+void b_tree_header_set_nroChaves (BTreeHeader *header, int new_value) {
 	header->nroChaves = _parse_counter(header->nroChaves, new_value);
 
     //Marca que o header precisará ser escrito em um momento oportuno.
