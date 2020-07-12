@@ -75,11 +75,11 @@ VirtualRegistry *virtual_registry_create_masked(RegistryFieldsMask mask) {
     Retorno
         nao ha retorno
 */
-void virtual_registry_delete(VirtualRegistry **reg_data_ptr) {
+void virtual_registry_free(VirtualRegistry **reg_data_ptr) {
     #define reg_data (*reg_data_ptr)
     
     if (reg_data_ptr == NULL) {
-        DP("ERROR: invalid pointer @virtual_registry_delete\n");
+        DP("ERROR: invalid pointer @virtual_registry_free\n");
         return;
     }
 

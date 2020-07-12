@@ -3,6 +3,7 @@
 #include "registry.h"
 #include "registry_utils.h"
 #include "string_utils.h"
+#include "bool.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,14 +23,16 @@
  *  Parâmetros:
  *      FILE *file -> stream do arquivo binário aberta com modo que permita escrita 
  *      VirtualRegistryUpdater *updated_reg -> registro (novos dados) com máscara de bits indicando quais campos devem ser atualizados    
- *  Retorno: void
+ *  Retorno: bool -> indica se o registro foi atualizado (falso somente em caso de erro ou registro deletado)
  */
-void binary_update_registry(FILE *file, VirtualRegistryUpdater *updated_reg) {
-    if (file == NULL || updated_reg == NULL)
-        return;
+bool binary_update_registry(FILE *file, VirtualRegistryUpdater *updated_reg) {
+    if (file == NULL || updated_reg == NULL) {
+        DP("ERROR: invalid parameters @binary_update_registry()\n");
+        return false;
+    }
 
-    //Se não houver nenhum campo a ser atualizado, não faça nenhum acesso a disco
-    if (updated_reg->fieldMask == MASK_NONE) return;
+    //Se não houver nenhum campo a ser atualizado, não faça nenhum acesso a disco (mas indique que foi atualizado, por motivos de correção de trabalho)
+    if (updated_reg->fieldMask == MASK_NONE) return true;
 
     //Armazena posição absoluta do começo do registro
     int registry_seek_start = ftell(file);
@@ -38,7 +41,7 @@ void binary_update_registry(FILE *file, VirtualRegistryUpdater *updated_reg) {
     VirtualRegistry *old_reg = binary_read_registry(file);
 
     //Se o registro estiver marcado como removido, não faça qualquer atualização.
-    if (old_reg == NULL) return;
+    if (old_reg == NULL) return false;
 
     //Obtém o tamanho dos campos variáveis antes e depois da atualização.
     int cidadeMaeOldSize = strlen(old_reg->cidadeMae);
@@ -179,7 +182,9 @@ void binary_update_registry(FILE *file, VirtualRegistryUpdater *updated_reg) {
     if (shouldFseek) fseek(file, registry_seek_start + REGISTRY_SIZE, SEEK_SET);
 
     //Libera a memória do registro anterior
-    virtual_registry_delete(&old_reg);
+    virtual_registry_free(&old_reg);
+
+    return true;
 }
 
 /**
@@ -190,8 +195,11 @@ void binary_update_registry(FILE *file, VirtualRegistryUpdater *updated_reg) {
  *      VirtualRegistry *reg_data -> registro a ser escrito
  *  Retorno: void
  */
-void binary_write_registry(FILE *file, VirtualRegistry *reg_data) {
-    if (file == NULL || reg_data == NULL) return;
+bool binary_write_registry(FILE *file, VirtualRegistry *reg_data) {
+    if (file == NULL || reg_data == NULL) {
+        DP("ERROR: invalid parameters @binary_write_registry()\n");
+        return false;
+    }
 
     int cidadeMae_size, cidadeBebe_size;
     char *garbage_str;
@@ -217,6 +225,8 @@ void binary_write_registry(FILE *file, VirtualRegistry *reg_data) {
     binary_write_char(file, reg_data->sexoBebe);
     binary_write_string(file, reg_data->estadoMae, 2);
     binary_write_string(file, reg_data->estadoBebe, 2);
+
+    return true;
 }
 
 
@@ -234,7 +244,8 @@ VirtualRegistry *binary_read_registry(FILE *file) {
     cidadeMae_size = binary_read_int(file);
     
     if (cidadeMae_size == -1) {
-        fseek(file, -sizeof(int), SEEK_CUR);
+        //Pula o registro atual
+        fseek(file, REGISTRY_SIZE-sizeof(int), SEEK_CUR);
         return NULL;
     }
 

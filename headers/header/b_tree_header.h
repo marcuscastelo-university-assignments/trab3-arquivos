@@ -20,7 +20,7 @@ typedef enum {
 typedef struct _b_tree_header BTHeader;
 
 BTHeader *b_tree_header_create(void);
-void b_tree_header_delete(BTHeader **header_ptr);
+void b_tree_header_free(BTHeader **header_ptr);
 
 void b_tree_header_write_to_bin(BTHeader *header, FILE *file);
 void b_tree_header_read_from_bin(BTHeader *header, FILE *bin_file);

@@ -12,7 +12,6 @@
                 "${workspaceFolder}/src/binary/binary_io.c",
                 "${workspaceFolder}/src/binary/binary_registry.c",
                 "${workspaceFolder}/src/csv/csv_reader.c",
-                "${workspaceFolder}/src/data_manager/data_manager.c",
                 "${workspaceFolder}/src/header/registry_header.c",
                 "${workspaceFolder}/src/header/b_tree_header.c",
                 "${workspaceFolder}/src/registry/registry.c",
@@ -33,7 +32,8 @@
                 "-I${workspaceFolder}/headers/binary",
                 "-I${workspaceFolder}/headers/utils",
                 "-I${workspaceFolder}/headers/header",
-                "-I${workspaceFolder}/headers/b_tree"
+                "-I${workspaceFolder}/headers/b_tree",
+                "-I${workspaceFolder}/headers/types"
             ],
             "options": {
                 "cwd": "/usr/bin"
