@@ -496,18 +496,18 @@ VirtualRegistryArray *registry_manager_fetch(RegistryManager *manager, VirtualRe
 VirtualRegistry *registry_manager_fetch_at(RegistryManager *manager, int RRN) {
     //Validação de parâmetros
     if (manager == NULL) {
-        DP("ERROR: (parameter) invalid null RegistryManager @registry_manager_fetch_all()\n");
+        DP("ERROR: (parameter) invalid null RegistryManager @registry_manager_fetch_at()\n");
         return NULL;
     }
 
     //Validação do estado do arquivo binário
     if (manager->bin_file == NULL) {
-        DP("ERROR: RegistryManager haven't opened the binary file @registry_manager_fetch_all()\n");
+        DP("ERROR: RegistryManager haven't opened the binary file @registry_manager_fetch_at()\n");
         return NULL;
     } 
 
     //Indica que o registro é inexistente se o RRN for inexistente
-    if (reg_header_get_next_RRN(manager->header) <= RRN || RRN <= 0) return NULL;
+    if (reg_header_get_next_RRN(manager->header) <= RRN || RRN < 0) return NULL;
 
     return _read_registry_at(manager, RRN);
 }

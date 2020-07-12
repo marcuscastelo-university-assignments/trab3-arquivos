@@ -32,7 +32,8 @@
                 "-I${workspaceFolder}/headers/binary",
                 "-I${workspaceFolder}/headers/utils",
                 "-I${workspaceFolder}/headers/header",
-                "-I${workspaceFolder}/headers/b_tree"
+                "-I${workspaceFolder}/headers/b_tree",
+                "-I${workspaceFolder}/headers/types"
             ],
             "options": {
                 "cwd": "/usr/bin"

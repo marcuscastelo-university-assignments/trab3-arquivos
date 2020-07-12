@@ -493,7 +493,7 @@ void funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     }
 
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
-    OPEN_RESULT open_result = registry_manager_open(registry_manager, reg_bin_filename, CREATE);
+    OPEN_RESULT open_result = registry_manager_open(registry_manager, reg_bin_filename, READ);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
         _print_open_result_message(open_result);
@@ -570,6 +570,7 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
         _print_open_result_message(o_res);
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
+        return;
     }
 
     int idNascimento = atoi(searchValueStr);
@@ -584,9 +585,10 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
 
     //Se não for encontrado
     if (REG_RRN == -1) {
-        printf("Registro Inexistente\n");
+        printf("Registro inexistente.\n");
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
+        return;
     }
 
     o_res = registry_manager_open(regman, reg_filename, READ);
@@ -594,6 +596,7 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
         _print_open_result_message(o_res);
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
+        return;
     }
 
     VirtualRegistry *registry = registry_manager_fetch_at(regman, REG_RRN);
@@ -601,6 +604,8 @@ void funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFie
     //Caso de ter sido deletado (ou RRN inválido)
     if (registry == NULL) {
         //TODO: definir comportamento e liberar memória
+        DP("Registro deletado não implementado!\n");
+        // return;
     }
 
     //Exibe o registro
