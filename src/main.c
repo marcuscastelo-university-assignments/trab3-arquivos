@@ -1,5 +1,5 @@
 /*
-    Trabalho 2 de SCC0215 - Organização de Arquivos
+    Trabalho 3 de SCC0215 - Organização de Arquivos
 
     Integrantes do grupo:
         - Lucas de Medeiros França Romero             nUSP: 11219154
@@ -29,35 +29,27 @@
 #include "debug.h"
 #include "pair.h"
 
-typedef struct _Funcionalidade6ExtensionInfo
+/**
+ *  Struct usada na funcionalidade10 para informar à funcionalidade6 o que deve ser executado.
+ *  Além disso, carrega informações necessárias à execução desse callback * 
+ */
+typedef struct
 {
+    //Parâmetros a serem passados ao callback
     BTreeManager *btman;
     int idNascimento, RRN;
+    ////
+
+    //Função a ser executada após a inserção de cada registro
     void (*callback)(struct _Funcionalidade6ExtensionInfo *info);
-} Funcionalidade6ExtensionInfo;
-
-
-/**
- *  Função de exibição de erro padronizada de acordo com as especificações
- *  do trabalho e o resultado da operação de abertura do registry_manager.
- * 
- *  Parâmetros:
- *      OPEN_RESULT open_result -> enum retornada pela função registry_manager_open(), 
- *          indicando o resultado da operação.
- *  Retorno:
- *      void
- */
-static void _print_open_result_message(OPEN_RESULT open_result) {
-    if (open_result & (OPEN_FAILED | OPEN_INCONSISTENT)) printf("Falha no processamento do arquivo.\n");
-    else if (open_result & OPEN_INVALID_ARGUMENT) DP("ERRO: Um argumento inválido foi informado\n");
-}
+} Funcionalidade10callbackInfo;
 
 /**
  *  Funcionalidade 1: Gerar arquivo binário a partir de CSV
  *  Parâmetros:
  *      const char *csv_filename -> nome do arquivo csv do qual serão lidos os registros
  *      const char *bin_filename -> nome do arquivo binário em que serão escritos os registros
- *  Retorno: void
+ *  Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
  */
 static bool funcionalidade1(char *csv_filename, char *bin_filename) {
     if (bin_filename == NULL) {
@@ -65,20 +57,22 @@ static bool funcionalidade1(char *csv_filename, char *bin_filename) {
         return false;
     }
     
-    //Cria um RegistryManager para fazer o gerenciamento dos dados, ler especificação do TAD
+    //Cria um RegistryManager para fazer a escrita dos registros, ler especificação do TAD
     RegistryManager *registry_manager = registry_manager_create();
     if (registry_manager == NULL) {
         DP("ERROR: couldn't create RegistryManager @funcionalidade1()\n");
         return false;
     }
 
+    //Tenta criar o arquivo de registros, exibindo mensagens de erro de acordo com as especificações se algum erro for encontrado
     OPEN_RESULT o_res = registry_manager_open(registry_manager, bin_filename, CREATE);
     if (o_res != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        _print_open_result_message(o_res);
+        open_result_print_message(o_res);
         return false;
     }
 
+    //Análogo ao RegistryManager
     CsvReader *csv_reader = csv_reader_create();
     if (registry_manager == NULL) {
         DP("ERROR: couldn't create CsvReader @funcionalidade1()\n");
@@ -95,6 +89,7 @@ static bool funcionalidade1(char *csv_filename, char *bin_filename) {
         return false;
     }
     
+    //Lê linha a linha do csv, escrevendo-a no binário até que o csv acabe
     VirtualRegistry *registry = NULL;
     while ((registry = csv_reader_readline(csv_reader)) != NULL) {
         registry_manager_insert_at_end(registry_manager, registry);
@@ -109,15 +104,16 @@ static bool funcionalidade1(char *csv_filename, char *bin_filename) {
 
 }
 
-void _DMForeachCallback_print_register(RegistryManager *manager, VirtualRegistry *registry) {
+//Função de callback usada nas funcionalidades 2 e 3. é enviada ao RegistryManager para ser usada como callback de funções internas. Nesse caso o callback simplesmente printa o registro
+static void _DMForeachCallback_print_register(RegistryManager *manager, VirtualRegistry *registry) {
     virtual_registry_print(registry);
 }
 
 /* 
  *  Funcionalidade 2: Abrir arquivo binário já existente
  *  Parâmetros:
- *      const char *bin_filename -> nome do arquivo em que serão lidos os registros
- *  Retorno: void      
+ *      const char *bin_filename -> nome do arquivo do qual serão lidos os registros
+ *  Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
  */
 static bool funcionalidade2(char *bin_filename) {
     if (bin_filename == NULL) {
@@ -125,7 +121,7 @@ static bool funcionalidade2(char *bin_filename) {
         return false;
     }
 
-    //Cria um RegistryManager para fazer o gerenciamento dos dados
+    //Cria um RegistryManager para fazer a leitura dos registros
     RegistryManager *registry_manager = registry_manager_create();
     
     if (registry_manager == NULL) {
@@ -137,12 +133,14 @@ static bool funcionalidade2(char *bin_filename) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, READ);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
         return false;
     }
 
     //Se não houverem registros, exibir mensagem conforme especificação do trabalho (obs: ignorando especificação do trabalho 1, que usa 'i' minúsculo. Supondo ser um erro de digitação)
     if (registry_manager_is_empty(registry_manager)) printf("Registro inexistente.\n");
+
+    //Senão, exibe todos os registros (usando o callback definido anteriormente)
     else registry_manager_for_each(registry_manager, _DMForeachCallback_print_register);
 
     //Deleta o RegistryManager, fechando o arquivo e liberando a memoria
@@ -150,12 +148,11 @@ static bool funcionalidade2(char *bin_filename) {
     return true;
 }
 
-
 /**
  *  Funcionalidade 3: Exbibe todos os registros condizentes com o filtro dado pelo usuário
  *  Parâmetros:
  *      char *bin_filename -> nome do arquivo em que serão lidos os registros
- *  Retorno: void
+ *  Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
  */
 static bool funcionalidade3 (char *bin_filename) {
     if (bin_filename == NULL) {
@@ -163,7 +160,7 @@ static bool funcionalidade3 (char *bin_filename) {
         return false;
     }
 
-    //Cria uma variavel do tipo RegistryManager para fazer o gerenciamento dos dados
+    //Cria uma variavel do tipo RegistryManager para fazer a leitura dos registros
     RegistryManager *registry_manager = registry_manager_create();
 
     if (registry_manager == NULL) {
@@ -174,26 +171,28 @@ static bool funcionalidade3 (char *bin_filename) {
     //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, READ);
     if (open_result != OPEN_OK) {
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
 
         //Ao interromper o fluxo padrão, é necessário limpar a memória
         registry_manager_free(&registry_manager);
         return false;
     }
 
-    //Le os campos e valores dados pelo usuarios para ser usado na busca
-    VirtualRegistry *search_sample_registry = virtual_registry_create_from_input(false);
+    //Lê os campos e valores dados pelo usuarios para ser usado na busca
+    VirtualRegistry *search_sample_registry = virtual_registry_create_from_input(false); //false indica que os campos não informados devem ser ignorados
     if (search_sample_registry == NULL) {
         DP("ERROR: couldn't get registry filters from user @funcionalidade3\n");
         return false;
     }
 
+    //Como a função registry_manager_for_each_match recebe um vetor de condições, deve ser criado um vetor unitário
     VirtualRegistryArray *reg_search_terms = virtual_registry_array_create_unique(search_sample_registry);
     if (reg_search_terms == NULL) {
         DP("ERROR: couldn't allocate memory for VirtualRegistryArray @funcionalidade3\n");
         return false;
     }
 
+    //Execute o callback definido anteriormente na main.c para printar todos os registros que satisfizerem a condição informada pelo usuário
     int foundRegistersCount = registry_manager_for_each_match(registry_manager, reg_search_terms, _DMForeachCallback_print_register);
 
     //Se não houver registros, exibe mensagem conforme especificação do trabalho
@@ -209,8 +208,8 @@ static bool funcionalidade3 (char *bin_filename) {
     Funcionalidade 4: Lê um registro em um dado RRN
     Parâmetros:
         char *bin_filename -> nome do arquivo binario que tera' seu registro lido
-        char *RRN_str -> string contendo o RRN (int) do registro a ser lido
-    Retorno: void
+        char *RRN_str -> string contendo o RRN (int) do registro a ser lido (evitar fscanf infinito se entrar com NaN no %d)
+    Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
 */
 static bool funcionalidade4 (char *bin_filename, char *RRN_str) {
     if (bin_filename == NULL) {
@@ -225,7 +224,12 @@ static bool funcionalidade4 (char *bin_filename, char *RRN_str) {
 
     //Cria uma variavel do tipo RegistryManager para fazer o gerenciamento dos dados    
     RegistryManager *registry_manager = registry_manager_create();
+
     int RRN = atoi(RRN_str);
+    if (RRN_str[0] != '0' && RRN == 0) {
+        DP("ERROR: invalid non-int RRN\n");
+        return false;
+    }
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't allocate memory for registry_manager @funcionalidade4()\n");
@@ -236,10 +240,11 @@ static bool funcionalidade4 (char *bin_filename, char *RRN_str) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, READ);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
         return false;
     }
 
+    //Se o arquivo estiver vazio, nem tenta buscar o RRN 
     if (registry_manager_is_empty(registry_manager)) {
         printf("Registro Inexistente.\n");
         registry_manager_free(&registry_manager);
@@ -250,29 +255,24 @@ static bool funcionalidade4 (char *bin_filename, char *RRN_str) {
     VirtualRegistry *reg_data = registry_manager_fetch_at(registry_manager, RRN);
 
     //Printa o registro caso exista
-    if (reg_data == NULL) {
-        printf("Registro Inexistente.\n");
-        registry_manager_free(&registry_manager);
-        return true;
-    }
-    
-    virtual_registry_print(reg_data);
-
-    //Desaloca toda a memoria
-    if (reg_data != NULL)
+    if (reg_data != NULL) {
+        virtual_registry_print(reg_data);
         virtual_registry_free(&reg_data);
-    
+    }
+    else {
+        printf("Registro Inexistente.\n");
+    }
+
     registry_manager_free(&registry_manager);
     return true;
 }
-
 
 /*
     Funcionalidade 5: deleta registros baseados em filtros dados pelo usuario
     Parâmetros:
         char *bin_filename -> nome do arquivo binario
         char *n_str -> string contendo a quantidade (int) de filtros
-    Retorno: void
+    Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
 */
 static bool funcionalidade5 (char *bin_filename, char *n_str) {
     //Validação de parâmetros
@@ -289,21 +289,26 @@ static bool funcionalidade5 (char *bin_filename, char *n_str) {
     //Cria uma variável do tipo RegistryManager para fazer o gerenciamento dos dados     
     RegistryManager *registry_manager = registry_manager_create();
     int n = atoi(n_str);
+    if (n_str != '0' && n == 0) {
+        DP("ERROR: invalid non-int n\n");
+        return false;
+    }
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't allocate memory for registry_manager @funcionalidade5()\n");
         return false;
     }
     
-    //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
+    //Abre o arquivo para escrita, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, MODIFY);
 
     if (open_result != OPEN_OK) { 
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
         registry_manager_free(&registry_manager);
         return false;
     }
 
+    //Se o arquivo estiver vazio, não apague nada
     if (registry_manager_is_empty(registry_manager)) {
         registry_manager_free(&registry_manager);
         return true;
@@ -322,7 +327,7 @@ static bool funcionalidade5 (char *bin_filename, char *n_str) {
     //Le todos os filtros de remocao dados pelo usuario e insere na linked list
     for (int i = 0; i < n; i++) {
         //Cria um filtro (false indica que o registro deve ser interpretado como filtro)
-        reg_filter = virtual_registry_create_from_input(false); //ler documentação de virtual_registry_create_from_input()
+        reg_filter = virtual_registry_create_from_input(false); //false indica que os campos não informados devem ser ignorados
         if (reg_filter == NULL) {
             DP("ERROR: couldn't allocate memory for VirtualRegistry @funcionalidade5()\n");
             registry_manager_free(&registry_manager);
@@ -363,9 +368,10 @@ static bool funcionalidade5 (char *bin_filename, char *n_str) {
     Parâmetros:
         char *bin_filename -> nome do arquivo binario
         char *n_str -> string contendo a quantidade (int) de registros a serem inseridos
-    Retorno: void
+        Funcionalidade10callbackInfo *extInfo -> struct de callback que pode ser informada para ser chamada a cada inserção (se NULL, é simplesmente ignorada).
+    Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
 */
-static bool funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6ExtensionInfo *extInfo) {
+static bool funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade10callbackInfo *extInfo) {
     //Validação de parâmetros
     if (bin_filename == NULL) {
         DP("ERROR: invalid filename @funcionalidade6()\n");
@@ -384,15 +390,15 @@ static bool funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6Ext
         return false;
     }
 
-    //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
+    //Abre o arquivo para escrita, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, MODIFY);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
         return false;
     }
 
-    char *campos[] = {"cidadeMae","cidadeBebe","idNascimento","idadeMae","dataNascimento","sexoBebe","estadoMae","estadoBebe"}; 
+    static char *campos[] = {"cidadeMae","cidadeBebe","idNascimento","idadeMae","dataNascimento","sexoBebe","estadoMae","estadoBebe"}; 
 
     int n = atoi(n_str);
     VirtualRegistry *reg_data;
@@ -425,7 +431,7 @@ static bool funcionalidade6 (char *bin_filename, char *n_str, Funcionalidade6Ext
     Parâmetros:
         char *bin_filename -> nome do arquivo binario
         char *n_str -> string contendo a quantidade (int) de registros a serem atualizados
-    Retorno: void
+    Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
 */
 static bool funcionalidade7 (char *bin_filename, char *n_str) {
     //Validação de parâmetros
@@ -451,7 +457,7 @@ static bool funcionalidade7 (char *bin_filename, char *n_str) {
     OPEN_RESULT open_result = registry_manager_open(registry_manager, bin_filename, MODIFY);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
         return false;
     }
 
@@ -482,7 +488,15 @@ static bool funcionalidade7 (char *bin_filename, char *n_str) {
     return true;
 }
 
-//TODO: comment
+/**
+ *  Funcionalidade 8: cria um novo índice de arvore-b e o alimenta
+ *  com os registros presente no arquivo de registros.
+ *  Parâmetros:
+ *      char *reg_bin_filename -> nome do arquivo de registros já existente
+ *      char *b_tree_filename -> nome do arquivo de indices a ser criado
+ *  Retorno:
+ *      bool -> indica se a funcionalidade foi executada com sucesso. 
+ */
 static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     //Validação de parâmetros
     if (reg_bin_filename == NULL || b_tree_filename == NULL) {
@@ -495,17 +509,18 @@ static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
 
     if (registry_manager == NULL) {
         DP("ERROR: couldn't create RegistryManager @funcionalidade8()\n");
-        return false;
+        if (DEBUG) return false;
     }
 
-    //Abre o arquivo para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
+    //Abre o arquivo de registros para leitura, caso a abertura não seja bem sucedida, exibe mensagem com o erro e interrompe o fluxo
     OPEN_RESULT open_result = registry_manager_open(registry_manager, reg_bin_filename, READ);
     if (open_result != OPEN_OK) {
         registry_manager_free(&registry_manager);
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
         return false;
     }
 
+    //Cria um BTreeManager para gerenciar a btree em disco
     BTreeManager *b_tree_manager = b_tree_manager_create();
 
     if (b_tree_manager == NULL) {
@@ -513,18 +528,20 @@ static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
         return false;
     }
 
+    //Tenta criar um novo arquivo de índices, se ocorrer algum erro, exibir como na especificação
     open_result = b_tree_manager_open(b_tree_manager, b_tree_filename, CREATE);
-
     if (open_result != OPEN_OK) {
-        _print_open_result_message(open_result);
+        open_result_print_message(open_result);
         b_tree_manager_free(&b_tree_manager);
         return false;
     }
 
+    //Obtém os headers do arquivo de registros que já está em RAM para fazer o loop
     RegistryHeader *reg_header = registry_manager_get_registry_header(registry_manager);
     int registryCount = reg_header_get_registries_count(reg_header);
     int RRN = -1;
     
+    //Insere todos os registros do arquivo de registros no arquivo de índices
     for (int i = 0; i < registryCount; i++) {
         RRN++;
         VirtualRegistry *reg = registry_manager_fetch_at(registry_manager, RRN);
@@ -542,14 +559,27 @@ static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     return true;
 }
 
-//TODO: remover includes desnecessários nos arquivos
+//TODO: COMENTAR FUNCIONALIDADE 9 E 10
+
+/**
+ *  Funcionalidade 9: busca um registro por seu RRN e o exibe na tela.
+ *  a busca é feita em um arquivo de índices de registros (árvore-B).
+ *  Após encontrar o registro no arquivo de índices, o RRN encontrado é
+ *  usado no arquivo de registros para exibir demais informações daquele registro.
+ *  Parâmetros:
+ *      char *reg_filename -> nome do arquivo de registros
+ *      char *b_tree_filename -> nome do arquivo de índices
+ *      char *searchFieldStr -> nome do campo a ser buscado no arquivo de índices (atualmente suporta apenas idNascimento)
+ *      char *searchVauleStr -> valor do campo a ser buscado no arquivo de índices 
+ *  Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
+ */
 static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFieldStr, char *searchValueStr) {
     if (reg_filename == NULL || b_tree_filename == NULL || searchFieldStr == NULL || searchValueStr == NULL) {
         DP("Invalid arguments @funcionalidade9()\n");
         return false;
     }
 
-    if (strcmp(searchFieldStr,"idNascimento") != 0) {
+    if (strcmp(searchFieldStr, "idNascimento") != 0) {
         DP("ERROR: trying to search in b-tree by unsuported field @funcionalidade9()\n");
         printf("Falha no processamento do arquivo\n");
         return false;
@@ -578,7 +608,7 @@ static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *se
     OPEN_RESULT o_res;
     o_res = b_tree_manager_open(btman, b_tree_filename, READ);
     if (o_res != OPEN_OK) {
-        _print_open_result_message(o_res);
+        open_result_print_message(o_res);
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
         return false;
@@ -586,7 +616,7 @@ static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *se
 
     o_res = registry_manager_open(regman, reg_filename, READ);
     if (o_res != OPEN_OK) {
-        _print_open_result_message(o_res);
+        open_result_print_message(o_res);
         b_tree_manager_free(&btman);
         registry_manager_free(&regman);
         return false;
@@ -620,10 +650,21 @@ static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *se
     return true;
 }
 
-void insertInBtreeCallback (Funcionalidade6ExtensionInfo *info) {
+//Callback usado pela funcionalidade 10 para indicar para a funcionalidade6 o que deve ser feito após cada inserção
+static void insertInBtreeCallback (Funcionalidade10callbackInfo *info) {
     b_tree_manager_insert(info->btman, info->idNascimento, info->RRN);
 }
 
+/**
+ *  Funcionalidade 10: realiza a inserção um registro tanto no arquivo de registros
+ *  quanto no arquivo de índices. Para tal, é chamada a funcionalidade6 com um extensor.
+ *  O extensor indica o que deve ser feito após a inserção.
+ *  Parâmetros:
+ *    char *reg_filename -> nome do arquivo de registros.
+ *    char *b_tree_filename -> nome do arquivo de índices.
+ *  Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
+ * 
+ */
 static bool funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
     BTreeManager *btman = b_tree_manager_create();
     if (btman == NULL) {
@@ -634,13 +675,13 @@ static bool funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_
     OPEN_RESULT o_res;
     o_res = b_tree_manager_open(btman, b_tree_filename, MODIFY);
     if (o_res != OPEN_OK) {
-        _print_open_result_message(o_res);
+        open_result_print_message(o_res);
         b_tree_manager_free(&btman);
         return false;
     }
 
     //Informações que são passadas para um callback da funcionalidade 6, que chama a funcionalidade10callback a cada inserção
-    Funcionalidade6ExtensionInfo extensionInfo;
+    Funcionalidade10callbackInfo extensionInfo;
     extensionInfo.btman = btman;
     extensionInfo.callback = insertInBtreeCallback;
     //Valores inválidos (não são utilizados)
