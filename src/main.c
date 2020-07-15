@@ -559,8 +559,6 @@ static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
     return true;
 }
 
-//TODO: COMENTAR FUNCIONALIDADE 9 E 10
-
 /**
  *  Funcionalidade 9: busca um registro por seu RRN e o exibe na tela.
  *  a busca é feita em um arquivo de índices de registros (árvore-B).
@@ -574,37 +572,41 @@ static bool funcionalidade8 (char *reg_bin_filename, char *b_tree_filename) {
  *  Retorno: bool -> indica se a funcionalidade foi executada com sucesso.
  */
 static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *searchFieldStr, char *searchValueStr) {
+    //Validação de parâmetros
     if (reg_filename == NULL || b_tree_filename == NULL || searchFieldStr == NULL || searchValueStr == NULL) {
         DP("Invalid arguments @funcionalidade9()\n");
         return false;
     }
 
+    //Checa se o usuário está procurando por um campo não suportado
     if (strcmp(searchFieldStr, "idNascimento") != 0) {
         DP("ERROR: trying to search in b-tree by unsuported field @funcionalidade9()\n");
         printf("Falha no processamento do arquivo\n");
         return false;
     }
 
+    //Em caso de resultado NaN, a conversão vai dar 0
     int idNascimento = atoi(searchValueStr);
-
-    //Em caso de resultado NaN
     if (searchValueStr[0] != '0' && idNascimento == 0) {
         DP("Trying to search a non-int idNascimento (idNascimentoStr = '%s')\n", searchValueStr);
         if (DEBUG) return false;
     }
 
+    //Tenta cria um gerenciador de btree
     BTreeManager *btman = b_tree_manager_create();
     if (btman == NULL) {
         DP("ERROR: couldn't allocate memory for BTreeManager\n");
         return false;
     }
 
+    //Tenta criar um gerenciador de registros
     RegistryManager *regman = registry_manager_create();
     if (regman == NULL) {
         DP("ERROR: couldn't allocate memory for RegistryManager\n");
         return false;
     }
 
+    //Tenta abrir o arquivo de índices e o arquivo de registros, exibindo as mensagens de erro de acordo
     OPEN_RESULT o_res;
     o_res = b_tree_manager_open(btman, b_tree_filename, READ);
     if (o_res != OPEN_OK) {
@@ -622,9 +624,10 @@ static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *se
         return false;
     }
 
+    //Obtém RRN desejado e o número de acessos a disco, respectivamente
     pairIntInt p = b_tree_manager_search_for(btman, idNascimento);
 
-    //Se não for encontrado
+    //Se não for encontrado (RRN == -1)
     if (p.first == -1) {
         printf("Registro inexistente.\n");
         b_tree_manager_free(&btman);
@@ -632,16 +635,11 @@ static bool funcionalidade9 (char *reg_filename, char *b_tree_filename, char *se
         return false;
     }
 
+    //Obtém o registro com o RRN encontrado
     VirtualRegistry *registry = registry_manager_fetch_at(regman, p.first);
 
-    //Caso de ter sido deletado (ou RRN inválido)
-    if (registry == NULL) {
-        //TODO: definir comportamento e liberar memória
-        DP("Registro deletado não implementado!\n");
-        if (DEBUG) return false;
-    }
-    else {
-        //Exibe o registro
+    //Se não houve problemas em buscar o registro e ele não estiver deletado, printa na tela
+    if (registry != NULL) {
         virtual_registry_print(registry);
     } 
 
@@ -666,12 +664,14 @@ static void insertInBtreeCallback (Funcionalidade10callbackInfo *info) {
  * 
  */
 static bool funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_str) {
+    //Tenta criar um gerenciador da btree
     BTreeManager *btman = b_tree_manager_create();
     if (btman == NULL) {
         DP("ERROR: couldn't allocate memory for BTreeManager\n");
         return false;
     }
 
+    //Tenta abrir o arquivo de índices, se não conseguir, exibe mensagem correspondente
     OPEN_RESULT o_res;
     o_res = b_tree_manager_open(btman, b_tree_filename, MODIFY);
     if (o_res != OPEN_OK) {
@@ -687,9 +687,11 @@ static bool funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_
     //Valores inválidos (não são utilizados)
     extensionInfo.idNascimento = -1;
     extensionInfo.RRN = -1;
+
+    //Chama a funcionalidade 6 (inserir no arquivo de registros), passando um callback (a cada inserção, o callback é chamado)
     bool success = funcionalidade6(reg_filename, n_str, &extensionInfo);
     b_tree_manager_free(&btman);
-    return success;
+    return success; //O sucesso da função é determinado pela funcionalidade 6
 }
 
 
@@ -700,12 +702,11 @@ static bool funcionalidade10(char *reg_filename, char *b_tree_filename, char *n_
  *  Retorno:
  *      char ** -> vetor com 'quantity' parâmetros
  */
-char **init_params(int quantity){ 
-
+char **prompt_params(int quantity){ 
     char **params = malloc(sizeof(char*) * quantity);
 
     if (params == NULL) {
-        DP("ERROR: not enough memory @init_params!\n");
+        DP("ERROR: not enough memory @prompt_params!\n");
         exit(1);
         return NULL;
     }
@@ -762,8 +763,9 @@ int main(void) {
     //Decide qual função usar baseado na funcionalidade escolhida
     switch (funcionalidade_code) {
         //Para cada funcionalidade: lê os n parâmetros e chama a função com estes.
+        //As funcionalidades que exigem binarioNaTela() retornam true se a função precisar ser chamada (se não houver erros)
         case 1: {
-            params = init_params(2); //n = 2
+            params = prompt_params(2); //Lê dois parâmetros
             bool success = funcionalidade1(params[0], params[1]);
             if (success) binarioNaTela(params[1]);
             free_params(&params, 2);
@@ -771,28 +773,28 @@ int main(void) {
         }
             
         case 2: {
-            params = init_params(1); //n = 1
+            params = prompt_params(1); //Lê um parâmetro
             funcionalidade2(params[0]);
             free_params(&params, 1);
             break;
         }
             
         case 3: {
-            params = init_params(1);
+            params = prompt_params(1);
             funcionalidade3(params[0]);
             free_params(&params, 1);
             break;
         }
 
         case 4: {
-            params = init_params(2);
+            params = prompt_params(2);
             funcionalidade4(params[0], params[1]);
             free_params(&params, 2);
             break;
         }
 
         case 5: {
-            params = init_params(2);
+            params = prompt_params(2);
             bool success = funcionalidade5(params[0], params[1]);
             if (success) binarioNaTela(params[0]);
             free_params(&params, 2);
@@ -800,7 +802,7 @@ int main(void) {
         }
 
         case 6: {
-            params = init_params(2);
+            params = prompt_params(2);
             bool success = funcionalidade6(params[0], params[1], NULL);
             if (success) binarioNaTela(params[0]);
             free_params(&params, 2);
@@ -808,7 +810,7 @@ int main(void) {
         }
         
         case 7: {
-            params = init_params(2);
+            params = prompt_params(2);
             bool success = funcionalidade7(params[0], params[1]);
             if (success) binarioNaTela(params[0]);
             free_params(&params, 2);
@@ -816,7 +818,7 @@ int main(void) {
         }
 
         case 8: {
-            params = init_params(2);
+            params = prompt_params(2);
             bool success = funcionalidade8(params[0], params[1]);
             if (success) binarioNaTela(params[1]);
             free_params(&params, 2);
@@ -824,14 +826,14 @@ int main(void) {
         }
 
         case 9: {
-            params = init_params(4);
+            params = prompt_params(4);
             funcionalidade9(params[0], params[1], params[2], params[3]);
             free_params(&params, 4);
             break;
         }
 
         case 10: {
-            params = init_params(3);
+            params = prompt_params(3);
             bool success = funcionalidade10(params[0], params[1], params[2]);
             if (success) binarioNaTela(params[1]);
             free_params(&params, 3);
