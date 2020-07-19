@@ -7,6 +7,7 @@
 #define H_INCREASE -1
 #define H_DECREASE -2
 
+//Definição de valores para uso mascara de bits em registry_header.c
 typedef enum {
     RHMASK_NONE = 0,
     RHMASK_STATUS = 1,

@@ -18,7 +18,7 @@ typedef enum {
  *  OPEN_OK -> indica que não houve problema na abertura do arquivo
  *  OPEN_FAILED -> Indica a necessidade de exibir a mensagem de erro "Falha no processamento do arquivo.", de acordo com as especificações do trabalho
  *  OPEN_INCONSISTENT ->  Indica que o arquivo está inconsistente, exibe "Falha no processamento do arquivo.", de acordo com as especificações do trabalho
- *  OPEN_INVALID_ARGUMENT
+ *  OPEN_INVALID_ARGUMENT -> Indica que houve um erro por parte do programador e um parâmetro incorreto foi passado
  */
 typedef enum {
     OPEN_OK = 0, OPEN_FAILED = 1, OPEN_INCONSISTENT = 2, OPEN_INVALID_ARGUMENT = 8

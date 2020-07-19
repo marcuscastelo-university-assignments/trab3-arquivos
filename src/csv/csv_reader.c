@@ -13,16 +13,33 @@
 
 typedef struct csv_reader_ CsvReader;
 
+//Representa o TAD CsvReader
 struct csv_reader_ {
     FILE *csv_file;
 };
 
-CsvReader *csv_reader_create() {
+
+/**
+ *  Factory de CsvReader, cria uma instância com valores padrão.
+ *  Parâmetros: nenhum
+ *  Retorno: 
+ *      RegistryManager* -> instância criada 
+ */
+CsvReader *csv_reader_create(void) {
     CsvReader *reader = malloc(sizeof(CsvReader));
     reader -> csv_file = NULL;
     return reader;
 }
 
+/**
+ *  Abre um arquivo csv, o qual será lido pelo CsvReader.
+ *  Parâmetros:
+ *      CsvReader *reader -> instância do leitor de csv
+ *		char* csv_filename -> nome do arquivo (caminho completo)
+ *  Retorno:
+ *      OPEN_RESULT -> resultado da abertura (ler a documentação de OPEN_RESULT em open_mode.h)
+ * 
+ */
 OPEN_RESULT csv_reader_open(CsvReader *reader, char *csv_filename) {
     if (csv_filename == NULL) {
         DP("ERROR: (parameter) invalid null file name @csv_read_all_lines!\n");
@@ -112,9 +129,9 @@ void csv_reader_close(CsvReader *reader) {
 }
 
 /*
-	Funcao que desaloca a memoria de um leitor de registros e fecha a stream se ainda estiver aberta. 
+	Funcao que desaloca a memoria de um leitor csv e fecha a stream se ainda estiver aberta. 
 	Parametros:
-		reader_ptr -> o endereco do leitor de registros
+		reader_ptr -> o endereco do leitor csv
 	Retorno:
 		nao ha retorno 
 */

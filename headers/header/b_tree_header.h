@@ -7,6 +7,7 @@
 #define H_INCREASE -1
 #define H_DECREASE -2
 
+//Definição de valores para uso mascara de bits em b_tree_header.c
 typedef enum {
     BTHMASK_NONE = 0,
     BTHMASK_STATUS = 1,

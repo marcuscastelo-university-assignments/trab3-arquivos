@@ -37,14 +37,14 @@ RegistryHeader *reg_header_create(void) {
         return NULL;
     }
 
-    //Status -1 significa que o lixo ainda não foi escrito
+    //Status -1 significa que o lixo ainda não foi escrito (valor é tratado apenas em RAM)
     header->status = -1;
     header->next_RRN = 0;
     header->registries_count = 0;
     header->removed_count = 0;
     header->updated_count = 0;
 
-    //Marca que, em um momento oportuno, todos os headers devem ser escritos 
+    //Marca que, em um momento oportuno, todos os headers devem ser escritos (supondo que é um arquivo novo, por enquanto)
     header->changedMask = RHMASK_ALL;
     
     return header;

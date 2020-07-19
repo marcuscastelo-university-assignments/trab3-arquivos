@@ -7,8 +7,6 @@
 
 #define HEADER_GARBAGE_SIZE 55
 
-//TODO: checar se os comentários estão coerentes, visto que copiei do registry_header.c
-
 /**
  *  Struct encapsulada por um TAD que representa os headers do arquivo na RAM.
  *  deve ser encapsulada pois ao fazer o "set" dos valores dos headers, estes são marcados para escrita
@@ -39,14 +37,14 @@ BTreeHeader *b_tree_header_create(void) {
         return NULL;
     }
 
-    //Status -1 significa que o lixo ainda não foi escrito
+    //Status -1 significa que o lixo ainda não foi escrito (valor é tratado apenas em RAM)
     header->status = -1;
     header->noRaiz = -1;
     header->nroNiveis = 0;
     header->proxRRN = 0;
     header->nroChaves = 0;
 
-    //Marca que, em um momento oportuno, todos os headers devem ser escritos 
+    //Marca que, em um momento oportuno, todos os headers devem ser escritos (supondo que é um arquivo novo, por enquanto)
     header->changedMask = BTHMASK_ALL;
 
     return header;
@@ -209,43 +207,39 @@ void b_tree_header_read_from_bin(BTreeHeader *header, FILE *bin_file) {
 char b_tree_header_get_status (BTreeHeader *header) { return header->status; }
 
 /*
-	Simples função get, retorna o valor encapsulado (next_RRN)
+	Simples função get, retorna o valor encapsulado (noRaiz)
     Parâmetros:
         BTreeHeader *header -> pointer para a struct referida.
     Retorno:
-        int -> o próximo RRN do arquivo
+        int -> o RRN do nó raiz
 */
-// int b_tree_header_get_next_RRN (BTreeHeader *header) { return header->noRaiz; }
 int b_tree_header_get_noRaiz (BTreeHeader *header) { return header->noRaiz; }
 
 /*
-	Simples função get, retorna o valor encapsulado (registries_count)
+	Simples função get, retorna o valor encapsulado (nroNiveis)
     Parâmetros:
         BTreeHeader *header -> pointer para a struct referida.
     Retorno:
-        int -> a quantidade de registros
+        int -> a quantidade de níveis da btree
 */
-// int b_tree_header_get_registries_count (BTreeHeader *header) { return header->nroNiveis; }
 int b_tree_header_get_nroNiveis (BTreeHeader *header) { return header->nroNiveis; }
 
 /*
-	Simples função get, retorna o valor encapsulado (removed_count)
+	Simples função get, retorna o valor encapsulado (proxRRN)
     Parâmetros:
         BTreeHeader *header -> pointer para a struct referida.
     Retorno:
-        int -> a quantidade de registros removidos
+        int -> o próximo RRN a ser criado
 */
-// int b_tree_header_get_removed_count (BTreeHeader *header) { return header->proxRRN; }
 int b_tree_header_get_proxRRN (BTreeHeader *header) { return header->proxRRN; }
 
 /*
-	Simples função get, retorna o valor encapsulado (updated_count)
+	Simples função get, retorna o valor encapsulado (nroChaves)
     Parâmetros:
         BTreeHeader *header -> pointer para a struct referida.
     Retorno:
-        int -> a quantidade de registros atualizados
+        int -> a quantidade de chaves
 */
-// int b_tree_header_get_updated_count (BTreeHeader *header) { return header->nroChaves; }
 int b_tree_header_get_nroChaves (BTreeHeader *header) { return header->nroChaves; }
 
 /*
@@ -285,7 +279,7 @@ static int _parse_counter(int current_value, int counter) {
 }
 
 /*
-	Simples função set, define o valor encapsulado (next_RRN).
+	Simples função set, define o valor encapsulado (noRaiz).
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
@@ -301,7 +295,7 @@ void b_tree_header_set_noRaiz (BTreeHeader *header, int new_value) {
 }
 
 /*
-	Simples função set, define o valor encapsulado (registries_count).
+	Simples função set, define o valor encapsulado (nroNiveis).
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
@@ -317,7 +311,7 @@ void b_tree_header_set_nroNiveis (BTreeHeader *header, int new_value) {
 }
 
 /*
-	Simples função set, define o valor encapsulado (removed_count).
+	Simples função set, define o valor encapsulado (proxRRN).
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:
@@ -333,7 +327,7 @@ void b_tree_header_set_proxRRN (BTreeHeader *header, int new_value) {
 }
 
 /*
-	Simples função set, define o valor encapsulado (updated_count).
+	Simples função set, define o valor encapsulado (nroChaves).
     OBS: não escreve no disco, apenas altera seu valor na RAM e indica que o header deve ser escrito
     em um momento oportuno.
     Parâmetros:

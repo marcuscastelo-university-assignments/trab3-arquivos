@@ -7,7 +7,7 @@
 
 typedef struct csv_reader_ CsvReader;
 
-CsvReader *csv_reader_create();
+CsvReader *csv_reader_create(void);
 OPEN_RESULT csv_reader_open(CsvReader *reader, char *csv_filename);
 VirtualRegistry *csv_reader_readline(CsvReader *reader);
 void csv_reader_close(CsvReader *reader);
