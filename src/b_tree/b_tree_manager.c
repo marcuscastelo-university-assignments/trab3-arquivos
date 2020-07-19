@@ -14,6 +14,9 @@
 
 #define NODE_SIZE 72
 
+/*
+	Struct auxiliar para a funcao recursiva de insercao na arvore-B
+*/
 struct _insert_answer {
 	int key;
 	int value;
@@ -33,11 +36,11 @@ struct _b_tree_manager {
 
 
 /*
-	Funcao que cria um gerenciador de registros, alocando memoria e definindo seus campos
+	Funcao que cria um gerenciador da arvore-B, alocando memoria e definindo seus campos
 	Parametros:
 		bin_file -> ponteiro do arquivo que tera' seus registros gerenciados.
 	Retorno:
-		BTreeManager* . O gerenciador de registros.
+		BTreeManager* . O gerenciador da arvore-B.
 */
 BTreeManager *b_tree_manager_create(void) {
 	//Tenta alocar memória
@@ -246,11 +249,11 @@ static void _b_tree_manager_seek(BTreeManager *manager, int RRN) {
 }
 
 /*
-	Funcao que le um registro, precisa estar exatamente no comeco do registro para funcionar
+	Funcao que le um node, precisa estar exatamente no comeco do node para funcionar
 	Parametros:
-		manager -> o gerenciador de registro que tera' um registro lido em seu binario
+		manager -> o gerenciador de node que tera' um node lido em seu binario
 	Retorno:
-		BTreeNode* -> O registro lido. NULL caso o registro tenha sido removido
+		BTreeNode* -> O node lido
 */
 BTreeNode *_b_tree_manager_read_current(BTreeManager *manager) {
 	if (manager == NULL) {
@@ -263,12 +266,12 @@ BTreeNode *_b_tree_manager_read_current(BTreeManager *manager) {
 }
 
 /*
-	Funcao que le um registro em um RRN dado
+	Funcao que le um node em um RRN dado
 	Parametros:
-		manager -> o gerenciador de registro que tera' um registro lido em seu binario
-		RRN -> o RRN do registro a ser lido
+		manager -> o gerenciador da arvore-B que tera' um registro lido em seu binario
+		RRN -> o RRN do node a ser lido
 	Retorno:
-		BTreeNode* -> O registro lido. NULL caso o registro tenha sido removido
+		BTreeNode* -> O node lido
 */
 BTreeNode *_read_node_at(BTreeManager *manager, int RRN) {
 	if (manager == NULL) {
@@ -281,11 +284,11 @@ BTreeNode *_read_node_at(BTreeManager *manager, int RRN) {
 }
 
 /*
-	Funcao que escreve um registro onde o ponteiro esta. Precisa estar exatamente no
+	Funcao que escreve um node onde o ponteiro esta. Precisa estar exatamente no
 	comeco de um RRN para ser eficiente
 	Paramentros:
-		manager -> o gerenciador de registro que tera' um registro escrito em seu binario
-		node -> o registro que sera escrito
+		manager -> o gerenciador de arvore-B que tera' um node escrito em seu binario
+		node -> o node que sera escrito
 	Retorno: void
 */
 static void _write_current_node(BTreeManager *manager, BTreeNode *node) {
@@ -300,11 +303,11 @@ static void _write_current_node(BTreeManager *manager, BTreeNode *node) {
 
 
 /*
-	Escreve um registro em um RRN dado
+	Escreve um node em um RRN dado
 	Paramentros:
-		manager -> o gerenciador de registro que tera' um registro lido em seu binario
-		RRN -> RRN do local onde sera escrito o registro
-		node -> o registro que sera escrito
+		manager -> o gerenciador de arvore-B que tera' um node lido em seu binario
+		RRN -> RRN do local onde sera escrito o node
+		node -> o node que sera escrito
 	Retorno: void
 */
 static void _write_node_at(BTreeManager *manager, int RRN, BTreeNode *node) {
@@ -313,14 +316,22 @@ static void _write_node_at(BTreeManager *manager, int RRN, BTreeNode *node) {
 		return;
 	}
 
-	_b_tree_manager_seek(manager, RRN);				//faz o seek
-	_write_current_node(manager, node);	//escreve no binario
+	_b_tree_manager_seek(manager, RRN);		//faz o seek
+	_write_current_node(manager, node);		//escreve no binario
 }
 
 /*
-
+	Faz a insercao recursiva de uma chave e de um valor em uma arvore-B
+	Parametros:
+		manager -> o gerenciador de arvore-B que sera inserido em seu binario
+		nodeRRN -> o RRN do node que sera verificado para insercao
+		key -> a chave que sera inserida
+		value -> o valor que sera inserido
+	Retorno:
+		insert_answer. A struct que possui as informacoes de "volta" na recursao, para eventuais promocoes. ou com valores nulos, caso promocoes nao se facam necessarias
 */
 insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int value) {
+	//Caso base: caso tenha passado do no folha.
 	if (nodeRRN == -1) {
 		insert_answer ans;
 		ans.key = key;
@@ -329,11 +340,16 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int 
 		return ans;
 	}
 
+	//le o node no RRN passado
 	BTreeNode *node = _read_node_at(manager, nodeRRN);
+	//pega o contador de itens no node
 	int n = b_tree_node_get_n(node);
+	//pega o proximo RRN no caminho pela arvore onde a chave melhor se encaixaria
 	int nextRRN = b_tree_node_get_RRN_that_fits(node, key);
 	insert_answer ans;
-
+	
+	//caso b_tree_node_get_RRN_that_fits() retorne -2, significa que a chave ja existe na arvore.
+	//Assim, a funcao retorna valores nulos para nao haver insercao de chaves repetidas
 	if (nextRRN == -2) {
 		ans.key = -1;
 		ans.value = -1;
@@ -341,9 +357,13 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int 
 		return ans;
 	} 
 
+	//chama a recursao
 	ans = recursive_insert(manager, nextRRN, key, value);
 
+	//caso a recursao retorne valores nulos (!= -1), significa que nao ha promocao para ser feita, entao nao faz nada.
+	//caso retorne valores validos, a promocao precisa ser feita
 	if (ans.key != -1) {
+		//caso os vetores de itens nao estejam cheios, insere o item no node, e atualiza a struct de retorno com valores nulos, pois nao ha necessidade de promocao
 		if (n < B_TREE_ORDER-1) {
 			int pos = b_tree_node_sorted_insert_item(node, ans.key, ans.value);
 			b_tree_node_insert_P(node, ans.RRN, pos+1);
@@ -351,50 +371,69 @@ insert_answer recursive_insert(BTreeManager *manager, int nodeRRN, int key, int 
 			ans.value = -1;
 			ans.RRN = -1;
 		}
+		//caso os vetores de item estejam cheios, faz a funcao de split 1-to-2 e seleciona o item pra promocao no node de nivel superior
 		else {
 			BTreeNode *new = b_tree_node_split_one_to_two(node, ans.key, ans.value, ans.RRN);
+			//pega o primeiro item do node novo para promover, o item da direita, de acordo com a especificacao
 			ans.key = b_tree_node_get_C(new, 0);
 			ans.value = b_tree_node_get_Pr(new, 0);
 			ans.RRN = b_tree_header_get_proxRRN(manager->header);
-
+			
+			//remove o item que sera promovido
 			b_tree_node_remove_item(new, 0);
-
+			
+			//escreve o node novo
 			_write_node_at(manager, ans.RRN, new);
 
+			//incrementa o valor do proximo RRN no header
 			b_tree_header_set_proxRRN(manager->header, H_INCREASE);
 
+			//desaloca a memoria do node novo
 			b_tree_node_free(new);
 		}
+		//atualiza o node antigo, caso tenha acontecido alguma alteracao
 		_write_node_at(manager, nodeRRN, node);
 	}
 
+	//desaloca a memoria no node
 	b_tree_node_free(node);
 	
 	return ans;
 }
 
 /*
-
+	Faz a insercao de uma chave e um valor na arvore-B
+	Parametros:
+		manager -> o gerenciador de arvore-B que sera inserido em seu binario
+		regIdNascimento -> a chave que sera inserida
+		regRRN -> o valor que sera inserido
 */
 void b_tree_manager_insert(BTreeManager *manager, int regIdNascimento, int regRRN) {
 	if (manager == NULL) {
 		return;
 	}
 
+	//pega o RRN do no raiz, para iniciar a busca do node para insercao
 	int nodeRRN = b_tree_header_get_noRaiz(manager->header);
+	//faz a insercao recursiva
 	insert_answer ans = recursive_insert(manager, nodeRRN, regIdNascimento, regRRN);
-
+	
+	//caso a insercao recursiva retorne valores validos ate a essa funcao, significa que um novo no raiz precisa ser criado
 	if (ans.key != -1) {
 		int nextRRN = b_tree_header_get_proxRRN(manager->header);
 		b_tree_header_set_noRaiz(manager->header, nextRRN);
 		b_tree_header_set_nroNiveis(manager->header, H_INCREASE);
 		b_tree_header_set_proxRRN(manager->header, H_INCREASE);
 
+		//cria um novo no, para ser o no raiz
 		BTreeNode *new = b_tree_node_create(b_tree_header_get_nroNiveis(manager->header));
+		//inserte o item no no' raiz
 		b_tree_node_sorted_insert_item(new, ans.key, ans.value);
+		//insere os Ps no no' raiz
 		b_tree_node_set_P(new, nodeRRN, 0);
 		b_tree_node_set_P(new, ans.RRN, 1);
-
+		
+		//escreve o novo no' raiz
 		_write_node_at(manager, nextRRN, new);
 		b_tree_node_free(new);
 	}
@@ -405,6 +444,14 @@ void b_tree_manager_insert(BTreeManager *manager, int regIdNascimento, int regRR
 }
 
 /*
+	Funcao de busca na arvore-B
+	Paramentros:
+		manager-> o gerenciador de arvore-B que sera procurado em seu binario
+		key -> a chave que sera procurada
+	Retorno:
+		pairIntInt. uma struct com dois valores int:
+			first -> o valor atrelado a chave procurada. -1 caso a chave nao seja encontrada
+			second -> o numero de acessos a disco necessarios para achar a chave
 
 */
 pairIntInt b_tree_manager_search_for (BTreeManager *manager, int key) {
@@ -417,16 +464,21 @@ pairIntInt b_tree_manager_search_for (BTreeManager *manager, int key) {
 
 	p.second = 0;
 	BTreeNode *node;
+	//pega o no' raiz para iniciar a busca
 	int nodeRRN = b_tree_header_get_noRaiz(manager->header);
 
+	//caso nodeRRN seja -1, significa que a chave nao esta inserida na arvore-B
 	while (nodeRRN != -1) {
 		node = _read_node_at(manager, nodeRRN);
 		p.second++;
 		if (node == NULL)
 			break;
+		//pega o proximo RRN no caminho pela arvore onde a chave melhor se encaixaria.
 		nodeRRN = b_tree_node_get_RRN_that_fits(node, key);
 
+		//caso b_tree_node_get_RRN_that_fits() retorne -2, significa que a chave ja existe no node
 		if (nodeRRN == -2) {
+			//procura no node atual a chave, e a retorna
 			for (int i = 0; i < B_TREE_ORDER; i++) {
 				if (b_tree_node_get_C(node, i) == key) {
 					int ans = b_tree_node_get_Pr(node, i);
@@ -442,8 +494,4 @@ pairIntInt b_tree_manager_search_for (BTreeManager *manager, int key) {
 
 	p.first = -1;
 	return p;
-}
-
-BTreeHeader *get_header(BTreeManager *man) {
-	return man->header;
 }

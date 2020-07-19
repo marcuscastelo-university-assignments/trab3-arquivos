@@ -26,7 +26,6 @@ void b_tree_node_remove_item (BTreeNode *node, int position);
 void b_tree_node_remove_P (BTreeNode *node, int position);
 
 int b_tree_node_get_RRN_that_fits (BTreeNode *node, int key);
-void b_tree_node_update_n (BTreeNode *node);
 
 BTreeNode *b_tree_node_split_one_to_two(BTreeNode *parent, int C, int Pr, int P);
 
