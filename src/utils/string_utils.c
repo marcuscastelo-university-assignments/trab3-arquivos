@@ -144,3 +144,18 @@ void scan_quote_string(char **str_ptr) {
 	}
 	#undef str
 }
+
+/**
+ *  Função de exibição de erro padronizada de acordo com as especificações
+ *  do trabalho e o resultado da operação de abertura do registry_manager.
+ * 
+ *  Parâmetros:
+ *      OPEN_RESULT open_result -> enum retornada pela função registry_manager_open(), 
+ *          indicando o resultado da operação.
+ *  Retorno:
+ *      void
+ */
+void open_result_print_message(OPEN_RESULT open_result) {
+    if (open_result & (OPEN_FAILED | OPEN_INCONSISTENT)) printf("Falha no processamento do arquivo.\n");
+    else if (open_result & OPEN_INVALID_ARGUMENT) DP("ERRO: Um argumento inválido foi informado\n");
+}

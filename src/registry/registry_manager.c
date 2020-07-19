@@ -15,6 +15,11 @@
 
 #define REG_SIZE 128
 
+/*
+	Struct que representa o gerenciador do arquivo de registros, usada para
+	armazenar certas informações relacionadas ao arquivo, como os headers, 
+	modo de abertura e rrn atual.
+*/
 struct _registry_manager {
     FILE *bin_file;
     OPEN_MODE requested_mode;
@@ -53,7 +58,7 @@ RegistryManager *registry_manager_create(void) {
  *		char* bin_filename -> nome do arquivo (caminho completo)
  *      OPEN_MODE -> READ, CREATE ou MODIFY, indicando o modo de abertura do arquivo
  *  Retorno:
- *      OPEN_RESULT -> resultado da abertura (ler a documentação de OPEN_RESULT)
+ *      OPEN_RESULT -> resultado da abertura (ler a documentação de OPEN_RESULT em open_mode.h)
  * 
  */
 OPEN_RESULT registry_manager_open(RegistryManager *manager, char* bin_filename, OPEN_MODE mode) {

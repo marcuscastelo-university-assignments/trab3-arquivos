@@ -10,12 +10,11 @@
 #include "string_utils.h"
 #include "debug.h"
 
-#define print_error(x) DP(x);
-
 #define NODE_SIZE 72
 
 /*
-	Struct auxiliar para a funcao recursiva de insercao na arvore-B
+	Struct auxiliar para a funcao recursiva de insercao na arvore-B.
+	Permite o retorno de diversas informações no algoritmo recursivo de inserção
 */
 struct _insert_answer {
 	int key;
@@ -24,21 +23,21 @@ struct _insert_answer {
 };
 
 /*
-	Struct que representa o gerenciador de registros, usada para debug
-	e para diferenciacao de nivel de complexidade no programa
+	Struct que representa o gerenciador do arquivo de índices, usada para
+	armazenar certas informações relacionadas ao arquivo, como os headers, 
+	modo de abertura e rrn atual.
 */
 struct _b_tree_manager {
 	BTreeHeader *header;
 	OPEN_MODE requested_mode;
-	FILE *bin_file;			//ponteiro do arquivo aberto e tendo seus registros gerenciados
-	int currRRN;			//RRN atual do ponteiro
+	FILE *bin_file;
+	int currRRN;
 };
 
 
 /*
 	Funcao que cria um gerenciador da arvore-B, alocando memoria e definindo seus campos
-	Parametros:
-		bin_file -> ponteiro do arquivo que tera' seus registros gerenciados.
+	Parametros: nenhum
 	Retorno:
 		BTreeManager* . O gerenciador da arvore-B.
 */
@@ -64,7 +63,7 @@ BTreeManager *b_tree_manager_create(void) {
  *		char* bin_filename -> nome do arquivo (caminho completo)
  *      OPEN_MODE -> READ, CREATE ou MODIFY, indicando o modo de abertura do arquivo
  *  Retorno:
- *      OPEN_RESULT -> resultado da abertura (ler a documentação de OPEN_RESULT)
+ *      OPEN_RESULT -> resultado da abertura (ler a documentação de OPEN_RESULT em open_mode.h)
  * 
  */
 bool b_tree_manager_open(BTreeManager *manager, char* bin_filename, OPEN_MODE mode) {
@@ -197,10 +196,10 @@ void b_tree_manager_close(BTreeManager *manager) {
 
 
 /*
-	Funcao que desaloca a memoria de um gerenciador de registros. 
+	Funcao que desaloca a memoria de um gerenciador da btree. 
 	Essa funcao NAO fecha o arquivo que estava sendo gerenciado
 	Parametros:
-		manager_ptr -> o endereco do gerenciador de registros
+		manager_ptr -> o endereco do gerenciador da btree
 	Retorno:
 		nao ha retorno 
 */
@@ -236,12 +235,12 @@ void b_tree_manager_free(BTreeManager **manager_ptr) {
 static void _b_tree_manager_seek(BTreeManager *manager, int RRN) {
 	//Validação de parâmetros
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @_b_tree_manager_seek()");
+		DP("ERROR: invalid parameter @_b_tree_manager_seek()");
 		return;
 	}
 	
 	if (RRN < 0) {
-		print_error("ERROR: invalid given RRN @_b_tree_manager_seek()\n");
+		DP("ERROR: invalid given RRN @_b_tree_manager_seek()\n");
 	}
 
 	fseek(manager->bin_file, (RRN+1) * NODE_SIZE, SEEK_SET);
@@ -257,7 +256,7 @@ static void _b_tree_manager_seek(BTreeManager *manager, int RRN) {
 */
 BTreeNode *_b_tree_manager_read_current(BTreeManager *manager) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @_b_tree_manager_read_current()\n");
+		DP("ERROR: invalid parameter @_b_tree_manager_read_current()\n");
 		return NULL;
 	}
 
@@ -268,19 +267,19 @@ BTreeNode *_b_tree_manager_read_current(BTreeManager *manager) {
 /*
 	Funcao que le um node em um RRN dado
 	Parametros:
-		manager -> o gerenciador da arvore-B que tera' um registro lido em seu binario
+		manager -> o gerenciador da arvore-B que tera' um nó lido em seu binario
 		RRN -> o RRN do node a ser lido
 	Retorno:
 		BTreeNode* -> O node lido
 */
-BTreeNode *_read_node_at(BTreeManager *manager, int RRN) {
+static BTreeNode *_read_node_at(BTreeManager *manager, int RRN) {
 	if (manager == NULL) {
-		print_error("ERROR: invalid parameter @_read_node_at()\n");
+		DP("ERROR: invalid parameter @_read_node_at()\n");
 		return NULL;
 	}
 	
 	_b_tree_manager_seek(manager, RRN);				//faz o seek do RRN
-	return _b_tree_manager_read_current(manager);	//le o registro e retorna
+	return _b_tree_manager_read_current(manager);	//le o nó e retorna
 }
 
 /*
@@ -293,7 +292,7 @@ BTreeNode *_read_node_at(BTreeManager *manager, int RRN) {
 */
 static void _write_current_node(BTreeManager *manager, BTreeNode *node) {
 	if (manager == NULL || node == NULL) {
-		print_error("ERROR: invalid parameter @_write_current_node()\n");
+		DP("ERROR: invalid parameter @_write_current_node()\n");
 		return;
 	}
 
@@ -312,7 +311,7 @@ static void _write_current_node(BTreeManager *manager, BTreeNode *node) {
 */
 static void _write_node_at(BTreeManager *manager, int RRN, BTreeNode *node) {
 	if (manager == NULL || node == NULL) {
-		print_error("ERROR: invalid parameter @_write_node_at()\n");
+		DP("ERROR: invalid parameter @_write_node_at()\n");
 		return;
 	}
 

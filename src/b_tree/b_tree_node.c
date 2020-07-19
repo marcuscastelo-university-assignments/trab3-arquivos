@@ -3,12 +3,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ *  Struct que define o TAD BTreeNode
+ *  indica em si as características do nó
+ *  conforme comentado abaixo
+ */
 struct _b_tree_node {
-    int nivel;
-    int n;
-    int C[B_TREE_ORDER-1];
-    int Pr[B_TREE_ORDER-1];
-    int P[B_TREE_ORDER];
+    int nivel;              //Nível do nó na árvore (1 indica que é uma folha)
+    int n;                  //Quantidade atual de chaves no nó    
+    int C[B_TREE_ORDER-1];  //Vetor de chaves (chaves não inseridas são representadas por -1)
+    int Pr[B_TREE_ORDER-1]; //Vetor de valores para cada chave (valores não inserido são -1)
+    int P[B_TREE_ORDER];    //Vetor de "pointers" para os filhos do nó (indocam o RRN do nó filho)
 };
 
 

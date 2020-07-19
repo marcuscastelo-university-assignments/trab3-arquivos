@@ -8,7 +8,7 @@
 #include <string.h>
 #include "debug.h"
 
-//TODO: comentar e usar mais vezes?
+//TODO: comentar
 VirtualRegistry *virtual_registry_create_copy(VirtualRegistry *base) {
     VirtualRegistry *reg_data = virtual_registry_create();
     
@@ -196,7 +196,6 @@ void virtual_registry_print (VirtualRegistry *reg_data) {
 
 
 /*
-    FUNCAO DE DEBUG
     Funcao que mostra todas as informacoes do registro na tela
     Parametros:
         reg_data -> VirtualRegistry* que tera' suas informacoes exibidas na tela

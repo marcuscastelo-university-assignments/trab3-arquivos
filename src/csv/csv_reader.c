@@ -7,6 +7,7 @@
 
 #include "registry_linked_list.h"
 #include "string_utils.h"
+#include "open_mode.h"
 
 #include "debug.h"
 

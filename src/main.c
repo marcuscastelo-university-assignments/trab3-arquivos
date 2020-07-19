@@ -33,7 +33,7 @@
  *  Struct usada na funcionalidade10 para informar à funcionalidade6 o que deve ser executado.
  *  Além disso, carrega informações necessárias à execução desse callback * 
  */
-typedef struct
+typedef struct _Funcionalidade10callbackInfo
 {
     //Parâmetros a serem passados ao callback
     BTreeManager *btman;
@@ -41,7 +41,7 @@ typedef struct
     ////
 
     //Função a ser executada após a inserção de cada registro
-    void (*callback)(struct _Funcionalidade6ExtensionInfo *info);
+    void (*callback)(struct _Funcionalidade10callbackInfo *info);
 } Funcionalidade10callbackInfo;
 
 /**
@@ -289,7 +289,7 @@ static bool funcionalidade5 (char *bin_filename, char *n_str) {
     //Cria uma variável do tipo RegistryManager para fazer o gerenciamento dos dados     
     RegistryManager *registry_manager = registry_manager_create();
     int n = atoi(n_str);
-    if (n_str != '0' && n == 0) {
+    if (n_str[0] != '0' && n == 0) {
         DP("ERROR: invalid non-int n\n");
         return false;
     }
