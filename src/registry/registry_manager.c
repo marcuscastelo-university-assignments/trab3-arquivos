@@ -515,7 +515,7 @@ VirtualRegistry *registry_manager_fetch_at(RegistryManager *manager, int RRN) {
 }
 
 
-/** TODO: arrumar comentário
+/**
  *  Busca todos os registros no arquivo que condigam com os termos de busca.
  *  OBS: os termos de busca são especificados com uma máscara, indicando quais campos
  *  devem ser comparados e quais são irrelevantes, de acordo com a entrada do usuário.

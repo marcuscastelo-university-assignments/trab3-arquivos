@@ -8,7 +8,15 @@
 #include <string.h>
 #include "debug.h"
 
-//TODO: comentar
+/**
+ *  Função usada para criar cópias de registros,
+ *  faz a cópia profunda de membros encapsulados.
+ *  Parâmetros:
+ *      VirtualRegistry *base -> registro que servirá de base para a cópia
+ *  Retorno: 
+ *      VirtualRegistry* -> novo registro criado com as informações copiadas do 'base'
+ * 
+ */
 VirtualRegistry *virtual_registry_create_copy(VirtualRegistry *base) {
     VirtualRegistry *reg_data = virtual_registry_create();
     

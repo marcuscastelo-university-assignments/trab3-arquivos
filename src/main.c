@@ -6,8 +6,6 @@
         - Marcus Vinicius Castelo Branco Martins      nUSP: 11219237
 */
 
-//TODO: atualizar comentários (com muito rigor pq mudou tudo)
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
